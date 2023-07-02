@@ -3,10 +3,6 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 import re
 
-
-
-
-
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 

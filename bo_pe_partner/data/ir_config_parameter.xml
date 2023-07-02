@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="provider_search_partner_by_vat" model="ir.config_parameter">
+        <field name="key">provider_search_partner_by_vat</field>
+        <field name="value"></field>
+    </record>
+
+</odoo>
