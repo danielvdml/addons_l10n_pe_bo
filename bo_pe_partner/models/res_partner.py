@@ -3,8 +3,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 import re
 
-patron_ruc = re.compile('[12]\d{10}$')
-patron_dni = re.compile('\d{8}$')
+
 
 
 
