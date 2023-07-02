@@ -7,6 +7,7 @@ Implementación de Clase ApisPeru, para el uso cliente de:
 - Consulta de SOAT
 - Consulta de Tipo de cambio
     """,
+    "author":"Daniel Moreno <daniel@bigodoo.com>",
     "data":[
         "data.xml"
     ]

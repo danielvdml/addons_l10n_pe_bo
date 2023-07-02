@@ -6,8 +6,9 @@
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
             <span name="address_name" position="before">
-                <field name="country_id"/>
+                <field name="commercial_name"/>
                 <field name="vat" position="move"/>
+                <field name="country_id"/>
             </span>
             <xpath expr="//div[@class='o_address_format']" position="after">
                 <field name="sunat_status"/>

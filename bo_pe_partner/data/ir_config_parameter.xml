@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>
+<odoo noupdate="1">
 
     <record id="provider_search_partner_by_vat" model="ir.config_parameter">
         <field name="key">provider_search_partner_by_vat</field>

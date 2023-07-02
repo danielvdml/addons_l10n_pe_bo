@@ -11,7 +11,7 @@ patron_dni = re.compile('\d{8}$')
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    def func_search_partner_by_vat_peruapis(self):
+    def _search_partner_by_vat_peruapis(self):
         result = {}
         ICPSudo = self.env["ir.config_parameter"].sudo()
         peruapis_token = ICPSudo.get_param("peruapis_token", default="")
@@ -26,9 +26,11 @@ class ResPartner(models.Model):
                         result = client.get_dni(self.vat)
                 else:
                     raise UserError("El Access Token de PERUAPIS no se encuentra establecido.")
+        _logger.info(result)
         return result
 
-    def match_peruapis(self):
+
+    def _match_fields_peruapis(self):
         return {
             "name":"name",
             "address":"street",
@@ -38,23 +40,10 @@ class ResPartner(models.Model):
             "condition":"sunat_condition"
         }
 
-    def func_process_values_partner_peruapis(self,vals):
-        match = self.match_peruapis()
-        result = {}
-        for key in vals:
-            if vals.get(key,False) and match.get(key,False):
-                result[match[key]] = vals[key]
-        
-        ubigeo = result.get("ubigeo",False)
-        if ubigeo:
-            district_id = self.env["l10n_pe.res.city.district"].search([("code","=",ubigeo)])
-            city_id = district_id.city_id
-            state_id = city_id.state_id
-            country_id = city_id.country_id
-            result.update({
-                "l10n_pe_district":district_id.id,
-                "city_id":city_id.id,
-                "state_id":state_id.id,
-                "country_id":country_id.id
-            })
+    def _process_values_partner_peruapis(self,result,vals):
+        if not result.get("commercial_name",False):
+            result.update(commercial_name = result.get("name"))
+        if "fullname" in vals:
+            result.update(name = vals.get("fullname"))
+
         return result

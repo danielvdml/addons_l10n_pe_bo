@@ -1,4 +1,4 @@
-<odoo>
+<odoo noupdate="1">
     <record id="bo_pe_partner_address_form" model="ir.ui.view">
         <field name="name">bo.pe.partner.form.address</field>
         <field name="model">res.partner</field>

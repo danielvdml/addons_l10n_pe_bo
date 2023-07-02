@@ -4,6 +4,7 @@
 * Establece un formulario de contacto con los elementos de departamento, provincia y distrito ordenados y dependientes.
 * Establece una base para la integración de consulta RUC/DNI con apis externas.
     """,
+    "author":"Daniel Moreno <daniel@bigodoo.com>",
     "depends":[
         "l10n_pe",
         "base_vat",

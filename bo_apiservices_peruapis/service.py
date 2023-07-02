@@ -27,15 +27,19 @@ class PeruApis(object):
         try:
             headers = {"Authorization":"Bearer %s" % self.ACCESS_KEY}
             response = requests.get(api % value,headers=headers,data={})
-            result = response.json()
+            
+            try:
+                result = response.json()
+            except Exception as e:
+                result = {}
         except Exception as e:
             raise UserError(e)
         
         if result.get("success",False):
-            return result.get("data")
-        else :
-            return {}
+            result = result.get("data",{})
 
+        return result
+        
     def get_dni(self,value,force=False):
         if patron_dni.match(value):
             return self.get(API_DNI,value)

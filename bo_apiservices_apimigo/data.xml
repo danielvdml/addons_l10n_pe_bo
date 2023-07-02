@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <record id="peruapis_token" model="ir.config_parameter">
-        <field name="key">peruapis_token</field>
+    <record id="apimigo_token" model="ir.config_parameter">
+        <field name="key">apimigo_token</field>
         <field name="value"></field>
     </record>
 
