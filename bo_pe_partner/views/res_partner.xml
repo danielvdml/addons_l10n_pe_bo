@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_move_vat" model="ir.ui.view">
+        <field name="name">view.partner.form.move.vat</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <span name="address_name" position="before">
+                <field name="country_id"/>
+                <field name="vat" position="move"/>
+            </span>
+        </field>
+    </record>
+
+    <record id="view_partner_form_l10n_latam_identification_move" model="ir.ui.view">
+        <field name="name">view.partner.form.l10n.latam.identification.move</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="l10n_latam_base.view_partner_latam_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group[1]/group[1]/div[1]" position="attributes">
+                <attribute name="class">d-flex</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
