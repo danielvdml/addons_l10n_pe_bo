@@ -58,10 +58,12 @@ class ResPartner(models.Model):
         
     @api.onchange('l10n_latam_identification_type_id', 'vat')
     def change_vat(self):
-        self.update(self.search_partner_by_vat())
+        for record in self:
+            record.update(record.search_partner_by_vat())
 
 
     def search_partner_by_vat(self):
+        self.ensure_one()
         result = {}
         ICPSudo = self.env["ir.config_parameter"].sudo()
         provider = ICPSudo.get_param("provider_search_partner_by_vat", default="")
