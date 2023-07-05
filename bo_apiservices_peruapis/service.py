@@ -42,13 +42,19 @@ class PeruApis(object):
         
     def get_dni(self,value,force=False):
         if patron_dni.match(value):
-            return self.get(API_DNI,value)
+            if not force:
+                return self.get(API_DNI,value)
+            else:
+                return self.get(("%s?force=true" % API_DNI),value)
         raise ValidationError("El valor de DNI no cumple con su formato de 8 dígitos.")
         
 
     def get_ruc(self,value,force=False):
         if patron_ruc.match(value):
-            return self.get(API_RUC,value)
+            if not force:
+                return self.get(API_RUC,value)
+            else:
+                return self.get(("%s?force=true" % API_RUC), value)
         
         raise ValidationError("El valor de RUC no tiene un formato correcto.")
     

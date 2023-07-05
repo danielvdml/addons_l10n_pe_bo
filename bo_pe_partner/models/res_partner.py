@@ -9,9 +9,9 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    commercial_name = fields.Char(string='Nombre comercial')
-    sunat_status = fields.Char(string="SUNAT - Estado")
-    sunat_condition = fields.Char(string="SUNAT - Condición")
+    #commercial_name = fields.Char(string='Nombre comercial')
+    #sunat_status = fields.Char(string="SUNAT - Estado")
+    #sunat_condition = fields.Char(string="SUNAT - Condición")
     ubigeo = fields.Char(string='Ubigeo')
 
     def _search_partner_by_vat(self,provider = ""):
@@ -66,10 +66,7 @@ class ResPartner(models.Model):
         ICPSudo = self.env["ir.config_parameter"].sudo()
         provider = ICPSudo.get_param("provider_search_partner_by_vat", default="")
         if provider or provider is not "none":
-            _logger.info(provider)
             result = self._search_partner_by_vat(provider)
-            _logger.info(result)
             result = self._process_values_partner(provider,result)
-            _logger.info(result)
         return result
     

@@ -11,6 +11,8 @@ patron_dni = re.compile('\d{8}$')
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
+
+
     def _search_partner_by_vat_peruapis(self):
         result = {}
         ICPSudo = self.env["ir.config_parameter"].sudo()
@@ -20,10 +22,11 @@ class ResPartner(models.Model):
             if l10n_pe_vat_code in ["6","1"]:
                 if peruapis_token:
                     client = PeruApis(peruapis_token)
+                    force = self.env.context.get("peruapis_force",False)
                     if l10n_pe_vat_code == "6" and patron_ruc.match(self.vat or ""):
-                        result = client.get_ruc(self.vat)
+                        result = client.get_ruc(self.vat,force)
                     elif l10n_pe_vat_code == "1" and patron_dni.match(self.vat or ""):
-                        result = client.get_dni(self.vat)
+                        result = client.get_dni(self.vat,force)
                 else:
                     raise UserError("El Access Token de PERUAPIS no se encuentra establecido.")
         _logger.info(result)
@@ -35,14 +38,9 @@ class ResPartner(models.Model):
             "name":"name",
             "address":"street",
             "location":"ubigeo",
-            "commercial_name":"commercial_name",
-            "status":"sunat_status",
-            "condition":"sunat_condition"
         }
 
     def _process_values_partner_peruapis(self,result,vals):
-        if not result.get("commercial_name",False):
-            result.update(commercial_name = result.get("name"))
         if "fullname" in vals:
             result.update(name = vals.get("fullname"))
 

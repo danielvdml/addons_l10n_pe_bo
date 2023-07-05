@@ -33,18 +33,14 @@ class ResPartner(models.Model):
     def _match_fields_apimigo(self):
         return {
             "direccion":"street",
-            "direccion_simple":"street2",
-            "ubigeo":"ubigeo",
-            "estado_del_contribuyente":"sunat_status",
-            "condicion_de_domicilio":"sunat_condition"
+            "direccion_simple":"street2"
         }
     
     def _process_values_partner_apimigo(self,result,vals):
         if "dni" in vals:
-            result.update(name = vals.get("nombre",False),
-                          commercial_name = vals.get("nombre",False))
+            result.update(name = vals.get("nombre",False))
         elif "ruc" in vals:
-            result.update(name = vals.get("nombre_o_razon_social","-"),
-                          commercial_name = vals.get("nombre_o_razon_social","-"))
+            result.update(name = vals.get("nombre_o_razon_social","-"))
+            
         return result
         
