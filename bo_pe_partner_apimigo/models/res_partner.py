@@ -33,7 +33,8 @@ class ResPartner(models.Model):
     def _match_fields_apimigo(self):
         return {
             "direccion":"street",
-            "direccion_simple":"street2"
+            "direccion_simple":"street2",
+            "ubigeo":"ubigeo"
         }
     
     def _process_values_partner_apimigo(self,result,vals):

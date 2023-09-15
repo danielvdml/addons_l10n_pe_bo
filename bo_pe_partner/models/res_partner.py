@@ -69,6 +69,7 @@ class ResPartner(models.Model):
         provider = ICPSudo.get_param("provider_search_partner_by_vat", default="")
         if provider or provider is not "none":
             result = self._search_partner_by_vat(provider)
-            result = self._process_values_partner(provider,result)
+            if result != {}:
+                result = self._process_values_partner(provider,result)
         return result
     

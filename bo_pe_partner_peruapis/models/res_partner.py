@@ -32,7 +32,6 @@ class ResPartner(models.Model):
         _logger.info(result)
         return result
 
-
     def _match_fields_peruapis(self):
         return {
             "name":"name",

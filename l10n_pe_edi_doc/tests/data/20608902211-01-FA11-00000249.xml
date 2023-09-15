@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <ext:ExtensionContent>
+                <ds:Signature Id="SignatureMT">
+                    <ds:SignedInfo>
+                        <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+                        <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />
+                        <ds:Reference URI="">
+                            <ds:Transforms>
+                                <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                                <ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+                            </ds:Transforms>
+                            <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+                            <ds:DigestValue>cQBgZLCksLR8W9+k42FEPdBR20M8XrTVkK04Cns1/vQ=</ds:DigestValue>
+                        </ds:Reference>
+                    </ds:SignedInfo>
+                    <ds:SignatureValue>aasbDjmCoMvwe9tl6HVgXMeX05YEAbQlkq1+OVzUQgtmygXl0tm4ltJ17dnaUwV3UYfAlqNSOw7Akr+RMcAAJdTUyfbt8CjcAR1vpyLI4IfQkS7KSidVDh2Qoh3FgN0Uvb7otPXg2eW2iHFoTQX1vJWDGProBKzHDqNaID4/A6BhmRcw8Yf9g4l6M5QVPxJ7/ITP21TB7vvQWOprqtVIp56LwIybnM5aFcFz/eLU3PlH3infUxV9kExfYDAgBcwO5euLbMhm5PcRlMWVu9xKIyuHKFurm+/RBAgyymZlnT4ea96NKt3Std4x9kOlg8dtzDymDIzsv7IkmnY22TW2Dw==</ds:SignatureValue>
+                    <ds:KeyInfo>
+                        <ds:X509Data>
+                            <ds:X509Certificate>MIIIhzCCBm+gAwIBAgIUBquVrgweHFVer2gqWo4wSAdyGn8wDQYJKoZIhvcNAQEL
+BQAwbDELMAkGA1UEBhMCUEUxPDA6BgNVBAoMM1JlZ2lzdHJvIE5hY2lvbmFsIGRl
+IElkZW50aWZpY2FjacOzbiB5IEVzdGFkbyBDaXZpbDEfMB0GA1UEAwwWRUNFUC1S
+RU5JRUMgQ0EgQ2xhc3MgMTAeFw0yMjAyMTYwNTAyMDFaFw0yNTAyMTUwNTAyMDFa
+MIHwMQswCQYDVQQGEwJQRTEUMBIGA1UECAwLQ1VTQ08tQ1VTQ08xFTATBgNVBAcM
+DFNBTiBKRVJPTklNTzEdMBsGA1UECgwUVk0gU09GVFdBUkUgREFUQSBTQUMxGjAY
+BgNVBGEMEU5UUlBFLTIwNjA4OTAyMjExMSEwHwYDVQQLDBhFUkVQX1NVTkFUXzIw
+MjIwMDAyNDU5MDAxFDASBgNVBAsMCzIwNjA4OTAyMjExMUAwPgYDVQQDDDd8fFVT
+TyBUUklCVVRBUklPfHwgVk0gU09GVFdBUkUgREFUQSBTQUMgQ0RUIDIwNjA4OTAy
+MjExMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtf3Kjo/ZB2bDVm9z
+Nj29bA32YgugdMxv0Am3OOa5BrINoJ3Eu/13hhG74wbBX1b368dPDg01sXjSQmC7
+ZzoZMpH3BQCD/TT+VdGFxGj7IcduM+yAnoZ4blNA6k+JWw65oNko5hBFCsCPspkH
+noKouzrdGKjLV5y0p8gbfobwV4i05RbFtvxyEqCYjyxcOeu9avgp8DU9CA3VmYL3
+Ocmq6jVANaGE2kqLmPWBl5T+KytX23W1CBfhDpgMZTf/EChNAEfHW1izPmebIr8A
+iDB26DxPWdt5bCQg59/5Cz9tYmZ5SX37Bt11CDkKHVySJ3xP6Eh+h9KiUW8wJhx/
+4pFrjwIDAQABo4IDmjCCA5YwDAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBRDFW7w
+09FrGykzQS1VrHEi0TylXTBuBggrBgEFBQcBAQRiMGAwNwYIKwYBBQUHMAKGK2h0
+dHA6Ly9jcnQucmVuaWVjLmdvYi5wZS9yb290My9jYWNsYXNzMS5jcnQwJQYIKwYB
+BQUHMAGGGWh0dHA6Ly9vY3NwLnJlbmllYy5nb2IucGUwggI3BgNVHSAEggIuMIIC
+KjB3BhErBgEEAYKTZAIBAwEAZYdoADBiMDEGCCsGAQUFBwIBFiVodHRwczovL3d3
+dy5yZW5pZWMuZ29iLnBlL3JlcG9zaXRvcnkvMC0GCCsGAQUFBwIBFiFQb2ztdGlj
+YSBHZW5lcmFsIGRlIENlcnRpZmljYWNp824wgcQGESsGAQQBgpNkAgEDAQBnh2gA
+MIGuMDIGCCsGAQUFBwIBFiZodHRwczovL3BraS5yZW5pZWMuZ29iLnBlL3JlcG9z
+aXRvcmlvLzB4BggrBgEFBQcCAjBsHmoARABlAGMAbABhAHIAYQBjAGkA8wBuACAA
+ZABlACAAUAByAOEAYwB0AGkAYwBhAHMAIABkAGUAIABDAGUAcgB0AGkAZgBpAGMA
+YQBjAGkA8wBuACAARQBDAEUAUAAtAFIARQBOAEkARQBDMIHnBhErBgEEAYKTZAIB
+AwEBZ4dzAzCB0TCBzgYIKwYBBQUHAgIwgcEegb4AQwBlAHIAdABpAGYAaQBjAGEA
+ZABvACAARABpAGcAaQB0AGEAbAAgAFQAcgBpAGIAdQB0AGEAcgBpAG8AIABwAGEA
+cgBhACAAQQBnAGUAbgB0AGUAIABBAHUAdABvAG0AYQB0AGkAegBhAGQAbwAgAEMA
+bABhAHMAcwAgADEALAAgAGUAbgAgAGMAdQBtAHAAbABpAG0AaQBlAG4AdABvACAA
+ZABlAGwAIABEAEwAIABOALoAIAAxADMANwAwMBMGA1UdJQQMMAoGCCsGAQUFBwME
+MHYGA1UdHwRvMG0wNKAyoDCGLmh0dHA6Ly9jcmwucmVuaWVjLmdvYi5wZS9jcmwv
+c2hhMi9jYWNsYXNzMS5jcmwwNaAzoDGGL2h0dHA6Ly9jcmwyLnJlbmllYy5nb2Iu
+cGUvY3JsL3NoYTIvY2FjbGFzczEuY3JsMB0GA1UdDgQWBBQx6+El+1MfxFNCm/gq
+rwWhM5ky4zAOBgNVHQ8BAf8EBAMCBsAwDQYJKoZIhvcNAQELBQADggIBADZxz7t5
+QYzdEKvMqRoHR7cZAIqVndFUZhvb+zaqFPUZ9pa8IdBvH0CC+3weLwnnm1Cmut0F
+uRhdbGmEprEfHhHOTCb/4P5V6jRkNS6XdX9ySgC5/PYUmoXG9JknTuSpfadC33In
+3q3rpNpXK0g7jzH0JzekNeT/MyZDh9r8UsoXvGGfQqcUAutC9j7IhRXPDzMTHDV7
+DgHgyzygy4KUCC23DW5IIlM9xb4lvjBQZPwy7584i0SILyA8J1h60vPPJIkZsngZ
+bEE+Qzx9Eo+MXTXD15witVxebWioLWw4YPzldvyT58y+bIXVZlARWZ4NMy0Hskvj
+Y/uP/pvAbuERBiA5MSR6lLkjgIIUeF04Kvw0ldSu8OgSxbgaq9LQT3gAp/6xRfsQ
+iQxBTUlBIsKeri8mW/L45k4PZwdtDO8CtKkIjQBYdhekJ8zwj9XGNroK2mKBPpwB
+oTNNygynHnS8IbF5kiQC9nDeUnllg4elQb24H1mNVFJZ01/G2/E7A3Mozt/k9Tqw
+9Yl3v5+quvTiL1vSuzYF6wDajLndrVm5w1kZg2wmHg9R32DYqcPQazuEzXPs2XkM
+aM2o1EHaRT1c0ISEpTusjxRdoLA9qAR24H8JZrjvk26ulL7kF6YQ/VQXfE95Jqkf
++GhDi2QYfQDL6DUq0YDatsfKIg9G4aMYuNMy
+                            </ds:X509Certificate>
+                        </ds:X509Data>
+                    </ds:KeyInfo>
+                </ds:Signature>
+            </ext:ExtensionContent>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+    <cbc:CustomizationID>2.0</cbc:CustomizationID>
+    <cbc:ID>FA11-00000249</cbc:ID>
+    <cbc:IssueDate>2023-08-09</cbc:IssueDate>
+    <cbc:DueDate>2023-08-09</cbc:DueDate>
+    <cbc:InvoiceTypeCode listAgencyName="PE:SUNAT" listID="1001" listName="Tipo de Documento" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
+    <cbc:Note languageLocaleID="2006">Operación sujeta a detracción</cbc:Note>
+    <cbc:DocumentCurrencyCode listAgencyName="United Nations Economic Commission for Europe" listID="ISO 4217 Alpha" listName="Currency">PEN</cbc:DocumentCurrencyCode>
+    <cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+    <cac:Signature>
+        <cbc:ID>20608902211</cbc:ID>
+        <cac:SignatoryParty>
+            <cac:PartyIdentification>
+                <cbc:ID>20608902211</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>VM SOFTWARE &amp; DATA S.A.C.</cbc:Name>
+            </cac:PartyName>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment>
+            <cac:ExternalReference>
+                <cbc:URI>#SignatureMT</cbc:URI>
+            </cac:ExternalReference>
+        </cac:DigitalSignatureAttachment>
+    </cac:Signature>
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeID="6">20608902211</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>VM SOFTWARE &amp; DATA S.A.C.</cbc:Name>
+            </cac:PartyName>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>VM SOFTWARE &amp; DATA S.A.C.</cbc:RegistrationName>
+                <cac:RegistrationAddress>
+                    <cbc:AddressTypeCode>0000</cbc:AddressTypeCode>
+                </cac:RegistrationAddress>
+            </cac:PartyLegalEntity>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeID="6">20603547676</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>OFIGROUP SOCIEDAD ANONIMA CERRADA</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+        </cac:Party>
+    </cac:AccountingCustomerParty>
+    <cac:PaymentMeans>
+        <cbc:ID>Detraccion</cbc:ID>
+        <cbc:PaymentMeansCode>001</cbc:PaymentMeansCode>
+        <cac:PayeeFinancialAccount>
+            <cbc:ID>00 173 068107</cbc:ID>
+        </cac:PayeeFinancialAccount>
+    </cac:PaymentMeans>
+    <cac:PaymentTerms>
+        <cbc:ID>Detraccion</cbc:ID>
+        <cbc:PaymentMeansID>022</cbc:PaymentMeansID>
+        <cbc:PaymentPercent>12.0</cbc:PaymentPercent>
+        <cbc:Amount currencyID="PEN">312.0</cbc:Amount>
+    </cac:PaymentTerms>
+    <cac:PaymentTerms>
+        <cbc:ID>FormaPago</cbc:ID>
+        <cbc:PaymentMeansID>Contado</cbc:PaymentMeansID>
+    </cac:PaymentTerms>
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="PEN">396.0</cbc:TaxAmount>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="PEN">2200.0</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="PEN">396.0</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cac:TaxScheme>
+                    <cbc:ID schemeAgencyName="PE:SUNAT" schemeName="Codigo de tributos" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05">1000</cbc:ID>
+                    <cbc:Name>IGV</cbc:Name>
+                    <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:LegalMonetaryTotal>
+        <cbc:LineExtensionAmount currencyID="PEN">2200.0</cbc:LineExtensionAmount>
+        <cbc:TaxInclusiveAmount currencyID="PEN">2596.0</cbc:TaxInclusiveAmount>
+        <cbc:AllowanceTotalAmount currencyID="PEN">0</cbc:AllowanceTotalAmount>
+        <cbc:PayableAmount currencyID="PEN">2596.0</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
+    <cac:InvoiceLine>
+        <cbc:ID>1</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="HUR">1.0</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="PEN">2200.0</cbc:LineExtensionAmount>
+        <cac:PricingReference>
+            <cac:AlternativeConditionPrice>
+                <cbc:PriceAmount currencyID="PEN">2596.0</cbc:PriceAmount>
+                <cbc:PriceTypeCode>01</cbc:PriceTypeCode>
+            </cac:AlternativeConditionPrice>
+        </cac:PricingReference>
+        <cac:TaxTotal>
+            <cbc:TaxAmount currencyID="PEN">396.0</cbc:TaxAmount>
+            <cac:TaxSubtotal>
+                <cbc:TaxableAmount currencyID="PEN">2200.0</cbc:TaxableAmount>
+                <cbc:TaxAmount currencyID="PEN">396.0</cbc:TaxAmount>
+                <cac:TaxCategory>
+                    <cbc:ID>S</cbc:ID>
+                    <cbc:Percent>18.0</cbc:Percent>
+                    <cbc:TaxExemptionReasonCode>10</cbc:TaxExemptionReasonCode>
+                    <cac:TaxScheme>
+                        <cbc:ID>1000</cbc:ID>
+                        <cbc:Name>IGV</cbc:Name>
+                        <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+                    </cac:TaxScheme>
+                </cac:TaxCategory>
+            </cac:TaxSubtotal>
+        </cac:TaxTotal>
+        <cac:Item>
+            <cbc:Description>Paquete de horas de desarrollo 20h</cbc:Description>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="PEN">2200.0</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+</Invoice>

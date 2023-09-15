@@ -20,28 +20,31 @@ class ApiMigo(object):
     def __init__(self,TOKEN) -> None:
         self.TOKEN = TOKEN
 
-    def post(self,api,vals = {}):
-        try:
-            headers = {
+    def _post(self,api_url,args):
+        headers = {
                 "accept": "application/json",
                 "content-type": "application/json"
             }
-            payload = {
-                "token": self.TOKEN,
-            }
-            payload.update(vals)
-            headers = {"Authorization":"Bearer %s" % self.TOKEN}
-            response = requests.post(api,json=payload,headers=headers)
-            if response.status_code == 200:
-                result = response.json()
-            else:
+        payload = {
+            "token": self.TOKEN,
+        }
+        payload.update(args)
+        headers = {"Authorization":"Bearer %s" % self.TOKEN}
+        response = requests.post(api_url,json=payload,headers=headers)
+        if response.status_code == 200:
+            result = response.json()
+        else:
+            result = {}
+        if not result.get("success",False):
                 result = {}
+        return result
+
+    def post(self,api_url,args):
+        try:
+            return self._post(api_url,args)
         except Exception as e:
             raise UserError(e)
-        
-        if not result.get("success",False):
-            result = {}
-        return result
+                
 
     def get_ruc(self,value):
         return self.post(API_RUC,{"ruc":value})
