@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="template_report_cpe_invoice" inherit_id="account.report_invoice_document">
+        <xpath expr="//address" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+
+        <xpath expr="//div[@id='informations']" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+        
+        <xpath expr="//div[hasclass('page')]/h2" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+        
+        <xpath expr="//div[hasclass('page')]/h2" position="before">
+            <t t-set="company" t-value="o.company_id"/>
+            <t t-set="documents" t-value="{'out_invoice_01':'FACTURA ELECTRÓNICA',
+                                           'out_invoice_03':'BOLETA ELECTRÓNICA',
+                                           'out_refund_07':'NOTA DE CRÉDITO ELECTRÓNICA',
+                                           'out_invoice_08':'NOTA DE DÉBITO ELECTRÓNICA',
+                                           'in_invoice_01':'FACTURA DE PROVEEDOR',
+                                           'in_invoice_03':'BOLETA DE PROVEEDOR',
+                                           'in_refund_07':'NOTA DE CRÉDITO DE PROVEEDOR',
+                                           'in_invoice_08':'NOTA DE DÉBITO DE PROVEEDOR'}"/>
+            <t t-set="document_display_name" t-value="documents.get('{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code),'-')"/>
+        </xpath>
+        
+        <xpath expr="//div[@id='informations']" position="after">
+            <div class="row" id="informations">
+                <div name="invoice_address" class="w-100">
+                    <!-- FACTURA Y BOLETA -->
+                    <table id="table_factura_boleta" class="w-100" t-if="'{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code) in ['out_invoice_01','out_invoice_03','in_invoice_01','in_invoice_03']">
+                        <tr>
+                            <!-- CLIENTE -->
+                            <th width="50%">
+                                <label t-esc="'CLIENTE: '"/>
+                            </th>
+                            <td class="label" width="50%">
+                                <span t-esc="(o.partner_id.name or '').upper()"/>
+                            </td>
+                            <!-- N° COT -->
+                            <th width="10%">
+                                <label t-esc="'N° COT: '"/>
+                            </th>
+                            <td class="label" width="30%">
+                                <!-- <span t-esc="o.ref" t-if="o.ref"/> -->
+                                <span t-esc="o.invoice_origin" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- RUC/DNI -->
+                            <th>
+                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                            </td>
+                            <!-- VENDEDOR -->
+                            <th>
+                                <label t-esc="'VENDEDOR: '" name="label_vendedor"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.user_id.name or ''" name="value_vendedor"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- DIRECCIÓN -->
+                            <th>
+                                <label t-esc="'DIRECCIÓN: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="'{} {}-{}'.format(o.partner_id.street or '',o.partner_id.state_id.name or '',o.partner_id.l10n_pe_district.name or '').upper()"/>
+                            </td>
+                            <!-- MONEDA -->
+                            <th>
+                                <label t-esc="'MONEDA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.currency_id.currency_unit_label" t-if="o.currency_id.currency_unit_label"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- FECHA EMISIÓN -->
+                            <th>
+                                <label t-esc="'FECHA EMISIÓN:'"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.invoice_date" t-if="o.invoice_date"/>
+                            </td>
+                            <!-- FECHA DE VENCIMIENTO -->
+                            <th>
+                                <label t-esc="'FECHA VENC.:'"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.invoice_date_due" t-if="o.invoice_date_due"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- TÉRMINO DE PAGO -->
+                            <th>
+                                <label t-esc="'TÉRMINO PAGO: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.invoice_payment_term_id.name" t-if="o.invoice_payment_term_id"/>
+                                <!-- <t t-set="payment_term" t-value="{'Credito':'Crédito','Contado':'Contado'}"/> -->
+                                <!-- <t t-esc="'{} ({})'.format(o.invoice_payment_term_id.name, payment_term[o.invoice_payment_term_type])"/> -->
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- NOTA DE CRÉDITO ELECTRÓNICA -->
+                    <table id="table_nota_credito" class="w-100" t-if="'{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code) == 'out_refund_07' ">
+                        <tr>
+                            <!-- CLIENTE -->
+                            <th>
+                                <label t-esc="'CLIENTE: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="(o.partner_id.name or '').upper()"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- RUC/DNI -->
+                            <th>
+                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- DIRECCIÓN -->
+                            <th>
+                                <label t-esc="'DIRECCIÓN: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="'{} {}-{}'.format(o.partner_id.street or '', o.partner_id.state_id.name or '', o.partner_id.l10n_pe_district.name or '').upper()"/>
+                            </td>
+                            <!-- REFERENCIA -->
+                            <th>
+                                <label t-esc="'REFERENCIA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.reversed_entry_id.name"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- FECHA EMISIÓN -->
+                            <th>
+                                <label t-esc="'FECHA EMISIÓN:'"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.invoice_date" t-if="o.invoice_date"/>
+                            </td>
+                            <!-- MOTIVO -->
+                            <!-- <th>
+                                <label t-esc="'MOTIVO: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.sustento_nota" t-if="o.sustento_nota"/>
+                            </td> -->
+                        </tr>
+                        <tr>
+                            <!-- MONEDA -->
+                            <th>
+                                <label t-esc="'MONEDA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.currency_id.currency_unit_label" t-if="o.currency_id.currency_unit_label"/>
+                            </td>
+                            <!-- DE FECHA -->
+                            <th>
+                                <label t-esc="'DE FECHA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.reversed_entry_id.invoice_date" t-if="o.reversed_entry_id.invoice_date"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- NOTA DE DÉBITO ELECTRÓNICA -->
+                    <table id="table_nota_debito" class="w-100" t-if="'{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code) == 'out_invoice_08' ">
+                        <tr>
+                            <!-- CLIENTE -->
+                            <th>
+                                <label t-esc="'CLIENTE: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="(o.partner_id.name or '').upper()"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- RUC/DNI -->
+                            <th>
+                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- DIRECCIÓN -->
+                            <th>
+                                <label t-esc="'DIRECCIÓN: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="'{} {}-{}'.format(o.partner_id.street or '', o.partner_id.state_id.name or '', o.partner_id.l10n_pe_district.name or '').upper()"/>
+                            </td>
+                            <!-- REFERENCIA -->
+                            <th>
+                                <label t-esc="'REFERENCIA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.debit_origin_id.name"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <!-- FECHA EMISIÓN -->
+                            <th>
+                                <label t-esc="'FECHA EMISIÓN:'"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.invoice_date" t-if="o.invoice_date"/>
+                            </td>
+                            <!-- MOTIVO -->
+                            <!-- <th>
+                                <label t-esc="'MOTIVO: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.sustento_nota" t-if="o.sustento_nota"/>
+                            </td> -->
+                        </tr>
+                        <tr>
+                            <!-- MONEDA -->
+                            <th>
+                                <label t-esc="'MONEDA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.currency_id.currency_unit_label" t-if="o.currency_id.currency_unit_label"/>
+                            </td>
+                            <!-- DE FECHA -->
+                            <th>
+                                <label t-esc="'DE FECHA: '"/>
+                            </th>
+                            <td class="label">
+                                <span t-esc="o.debit_origin_id.invoice_date" t-if="o.debit_origin_id.invoice_date"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </xpath>
+
+        <xpath expr="//table[hasclass('o_main_table')]/thead" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+
+        <xpath expr="//table[hasclass('o_main_table')]/tbody" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+
+        <xpath expr="//table[hasclass('o_main_table')]" position="after">
+            <!-- Is there a discount on at least one line? -->
+            <t t-set="display_discount" t-value="any([l.discount for l in o.invoice_line_ids])"/>
+            <t t-set="lot_values" t-value="o._get_invoiced_lot_values()"/>
+            <div class="table-invoice-lines row pt-2 pb-2">
+                <table class="w-100">
+                    <thead>
+                        <tr>
+                            <th class="h_item">Item</th>
+                            <th class="h_quantity">Cant.</th>
+                            <th class="h_product_uom_id">U.M.</th>
+                            <th class="h_name">Descripción</th>
+                            <!-- <th class="h_lot" t-if="len(o.invoice_line_ids.filtered(lambda r: r.lot_name != False)) > 0">Serie/Lotes</th> -->
+                            <th class="h_value_unit">V.U.</th>
+                            <th class="h_price_unit">P.U.</th>
+                            <th class="h_discount" t-if="display_discount">Dscto.(%)</th>
+                            <th class="h_price_total">P.V.</th>
+                        </tr>
+                    </thead>
+                    <tbody class="invoice_tbody">
+                        <t t-set="item" t-value="1"/>
+                        <!-- <t t-set="invoice_lines" t-value="o.invoice_line_ids.filtered(lambda r:not r.is_charge_or_discount)"/> -->
+                        <t t-set="invoice_lines" t-value="o.invoice_line_ids"/>
+                        <tr t-foreach="invoice_lines.sorted('sequence')" t-as="l">
+                            <t t-if="l.display_type == 'product'">
+                                <t t-set="is_free" t-value="len(l.tax_ids.filtered(lambda r:r.l10n_pe_edi_affectation_reason == '31')) == 0"/>
+                                <td class="v_item">
+                                    <span t-esc="item"/>
+                                </td>
+                                <td class="v_quantity">
+                                    <span t-field="l.quantity"/>
+                                </td>
+                                <td class="v_product_uom_id">
+                                    <span t-field="l.product_uom_id.name"/>
+                                </td>
+                                <td class="v_name">
+                                    <span t-field="l.name"/>
+                                </td>
+                                <!-- <td class="v_lot"  t-if="len(o.invoice_line_ids.filtered(lambda r: r.lot_name != False)) > 0">
+                                    <t t-if="l.lot_name != False and len(l.lot_name.split(',')) > 1">
+                                        <t t-foreach="l.lot_name.split(',')" t-as="lote">
+                                            <p t-esc="lote" style="margin:0 !important;padding:0 !important;"/>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-field="l.lot_name"/>
+                                    </t>
+                                </td> -->
+                                <td class="v_value_unit">
+                                    <span t-esc="round((l.price_subtotal/l.quantity)/(1-l.discount/100),2)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                </td>
+                                <td class="v_price_unit">
+                                    <t t-if="is_free">
+                                        <span t-esc="round((l.price_total/l.quantity)/(1-l.discount/100),2)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="float('0')" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </t>
+                                </td>
+                                <td class="v_discount" t-if="display_discount">
+                                    <span t-if="l.discount &gt; 0">
+                                        <span t-esc="round(l.price_total/l.quantity,4)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                        <span t-esc="'('+str(l.discount)+'%)'"/>
+                                    </span>
+                                </td>
+                                <td class="v_price_total">
+                                    <t t-if="is_free">
+                                        <span t-field="l.price_total" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-esc="'*Bonif*'"/>
+                                    </t>
+                                </td>
+                                <t t-set="item" t-value="item+1"/>
+                            </t>
+                            <t t-if="l.display_type == 'line_section'">
+                                <td colspan="99">
+                                    <b><span t-field="l.name" t-options="{'widget': 'text'}"/></b>
+                                </td>
+                                <t t-set="current_section" t-value="l"/>
+                                <t t-set="current_subtotal" t-value="0"/>
+                            </t>
+                            <t t-if="l.display_type == 'line_note'">
+                                <td colspan="99">
+                                    <span t-field="l.name" t-options="{'widget': 'text'}"  style="font-style: italic;margin:10px;color:dimgray"/>
+                                </td>
+                            </t>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </xpath>
+
+        <xpath expr="//div[hasclass('clearfix')]" position="attributes">
+            <attribute name="style">display:none !important</attribute>
+        </xpath>
+
+        <xpath expr="//div[hasclass('clearfix')]" position="after">
+            <div class="row invoice-content-total" id="total">
+                <div class="col-8 additional-information">
+                    <div t-if="len(o.company_id.bank_ids) &gt; 0" name="company_banks" class="banks">
+                        <br/>
+                        <br/>
+                        <ul>
+                            <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
+                                <li t-if="bank.show_report_sale">
+                                    <span t-esc="'{} {}: {}'.format(bank.bank_id.name or '',bank.description or '',bank.acc_number or '')"></span>
+                                </li>
+                            </t>
+                        </ul>
+                        <br/>
+                    </div>
+                </div>
+                <div class="col-4 p-0">
+                    <table class="w-100" name="invoice-table-total">
+                        <t t-set="tax_totals" t-value="o.tax_totals"/>
+                        <t t-call="account.document_tax_totals"/>
+                    </table>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

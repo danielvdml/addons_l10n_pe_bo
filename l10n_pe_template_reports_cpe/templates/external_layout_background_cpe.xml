@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="external_layout_background_cpe">
+        <div t-attf-class="header o_company_#{company.id}_layout">
+            <t t-set="o" t-value="o if o else (doc if doc else docs[0])"/>
+            <div class="o_report_header_pe_v1">
+                <div class="row">
+                    <div class="col-3" name="company_logo">
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" alt="Logo" class="w-100"/>
+                    </div>
+                    <div class="col-5" name="company_address">
+                        <div>
+                            <span t-field="company.name"/>
+                        </div>
+                        <div>
+                            <span t-field="company.street"/>
+                        </div>
+                        <div t-if="company.email">
+                            <b> Email: </b>
+                            <span t-field="company.email"/>
+                        </div>
+                        <div t-if="company.phone">
+                            <b> Teléfono: </b>
+                            <span t-field="company.phone"/>
+                        </div>
+                        <div t-if="company.website">
+                            <b> Website: </b>
+                            <span t-field="company.website"/>
+                        </div>
+                    </div>
+                    <div class="col-4" name="company_document">
+                        <div class="pt-2">
+                            <div class="text-center">
+                                <b>
+                                    <t t-esc="document_display_name"/>
+                                </b>
+                            </div>
+                            <div class="text-center">
+                                <span t-esc="'R.U.C. {}'.format(company.vat or '')"/>
+                            </div>
+                            <div class="text-center">
+                                <span t-esc="o.name"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div t-attf-class="o_company_#{company.id}_layout article o_report_layout_pe_v1" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div class="footer o_company_#{company.id}_layout">
+            <div class="o_report_footer_pe_v1">
+            </div>
+        </div>
+    </template>
+    <record id="base.main_company" model="res.company">
+        <field name="external_report_layout_id" ref="l10n_pe_template_reports_cpe.external_layout_background_cpe"/>
+    </record>
+</odoo>
