@@ -364,9 +364,7 @@
                         <br/>
                         <ul>
                             <t t-foreach="o.company_id.partner_id.bank_ids" t-as="bank">
-                                <li t-if="bank.show_report_sale">
-                                    <span t-esc="'{} {}: {}'.format(bank.bank_id.name or '',bank.description or '',bank.acc_number or '')"></span>
-                                </li>
+                                <span t-esc="'{} {}: {}'.format(bank.bank_id.name or '',bank.description or '',bank.acc_number or '')"></span>
                             </t>
                         </ul>
                         <br/>
