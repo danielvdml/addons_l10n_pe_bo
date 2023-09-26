@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="sms_composer_custom_alex" model="ir.ui.view">
+            <field name="name">sms.composer.custom.alex</field>
+            <field name="model">sms.composer</field>
+            <field name="inherit_id" ref="sms.sms_composer_view_form"/>
+            <field name="arch" type="xml">
+                <!-- <field name="composition_mode" position="attributes"> -->
+                    <!-- <attribute name="invisible">0</attribute> -->
+                <!-- </field> -->
+                <xpath expr="//button[@special='cancel']" position="attributes">
+                    <attribute name="string">Cerrar</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_send_sms'][1]" position="attributes">
+                    <attribute name="string">Enviando</attribute>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
