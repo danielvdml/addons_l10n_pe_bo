@@ -377,6 +377,31 @@
                     </table>
                 </div>
             </div>
+
+
+
+            <!-- <div class="row" id="qr-section">
+                <br/>
+                <div class="col-12" t-if="'{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code) in ['out_invoice_01','out_invoice_03','out_refund_07','out_invoice_08']">
+                    <div t-if="o.state in ['posted','paid']" class="d-flex flex-row">
+                        <div name="electronic_invoice_qr">
+                            <img class="border border-dark rounded" t-att-src="o.generate_text_qr(o)"/>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </xpath>
+        <xpath expr="//div[@id='qrcode']" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+        <xpath expr="//div[@id='qrcode']" position="after">
+            <div>
+                <t t-set="qr_code_url" t-value="o.generate_text_qr(o)"/>
+                <p t-if="qr_code_url">
+                    <!-- <strong class="text-center">Scan me with your banking app.</strong><br/><br/> -->
+                    <img class="border border-dark rounded" t-att-src="qr_code_url"/>
+                </p>
+            </div>
         </xpath>
     </template>
 </odoo>
