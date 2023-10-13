@@ -51,10 +51,11 @@
                         <tr>
                             <!-- RUC/DNI -->
                             <th>
-                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                                <!-- <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/> -->
+                                <label>DOC: </label>
                             </th>
                             <td class="label">
-                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                                <span t-esc="'{} - {}'.format(o.partner_id.l10n_latam_identification_type_id.name, (o.partner_id.vat or '').upper())"/>
                             </td>
                             <!-- VENDEDOR -->
                             <th>
@@ -122,10 +123,11 @@
                         <tr>
                             <!-- RUC/DNI -->
                             <th>
-                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                                <!-- <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/> -->
+                                <label>DOC: </label>
                             </th>
                             <td class="label">
-                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                                <span t-esc="'{} - {}'.format(o.partner_id.l10n_latam_identification_type_id.name, (o.partner_id.vat or '').upper())"/>
                             </td>
                         </tr>
                         <tr>
@@ -191,10 +193,11 @@
                         <tr>
                             <!-- RUC/DNI -->
                             <th>
-                                <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/>
+                                <!-- <label t-esc="'{}:'.format(o.partner_id.l10n_latam_identification_type_id.name)"/> -->
+                                <label>DOC: </label>
                             </th>
                             <td class="label">
-                                <span t-esc="(o.partner_id.vat or '').upper()"/>
+                                <span t-esc="'{} - {}'.format(o.partner_id.l10n_latam_identification_type_id.name, (o.partner_id.vat or '').upper())"/>
                             </td>
                         </tr>
                         <tr>
