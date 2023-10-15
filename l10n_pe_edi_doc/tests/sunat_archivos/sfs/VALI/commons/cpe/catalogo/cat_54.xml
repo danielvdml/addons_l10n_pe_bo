@@ -29,7 +29,6 @@
 <c id="028" tasa="4">Transporte de pasajeros</c>
 <c id="030" tasa="4">Contratos de construcción</c>
 <c id="031" tasa="10">Oro gravado con el IGV</c>
-<c id="032" tasa="10">Paprika y otros frutos de los generos capsicum o pimienta</c>
 <c id="034" tasa="10">Minerales metálicos no auríferos</c>
 <c id="035" tasa="1.5">Bienes exonerados del IGV</c>
 <c id="036" tasa="1.5">Oro y demás minerales metálicos exonerados del IGV</c>
@@ -39,3 +38,4 @@
 <c id="041" tasa="15">Plomo</c>
 <c id="099" tasa="8">Ley 30737</c>
 </l>
+

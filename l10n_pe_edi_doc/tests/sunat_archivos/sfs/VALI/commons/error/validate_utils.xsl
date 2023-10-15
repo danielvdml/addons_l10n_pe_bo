@@ -8,10 +8,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
                dp:ignore-multiple="yes"/ -->
   <!-- xsl:include href="local:///commons/StringTemplates.xsl"
                dp:ignore-multiple="yes"/ -->
-  <!-- Inicio: SFS -->
-  <xsl:include href="../../../VALI/commons/error/error_utils.xsl"/>
-  <xsl:include href="../../../VALI/commons/StringTemplates.xsl"/>
-  <!-- Fin: SFS -->
+  <xsl:include href="./error_utils.xsl"/>
   <!-- Template que sirve para validar que exista y que serie y nro sera valido segun su tipo -->
   <!-- Se debe de usar para elementos obligatorios -->
   <xsl:template name="existAndValidateSerieyNroCPE">
@@ -327,25 +324,6 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
             </xsl:otherwise>
           </xsl:choose>
         </xsl:if> -->
-
-                <xsl:if test="not(regex:match($node, $regexp,'!'))">
-                    <xsl:choose>
-                        <xsl:when test="$isError">
-                            <xsl:call-template name="rejectCall">
-                                <xsl:with-param name="errorCode" select="$errorCodeValidate" />
-                                <xsl:with-param name="errorMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
-                            </xsl:call-template>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            
-                            <xsl:call-template name="addWarning">
-                                <xsl:with-param name="warningCode" select="$errorCodeValidate" />
-                                <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
-                            </xsl:call-template>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:if>
-
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -357,7 +335,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="regexp"/>
     <xsl:param name="isError" select="true()"/>
     <xsl:param name="descripcion" select="'INFO'"/>
-    <!-- <xsl:if test="count($node) &gt;= 1 and not(regexp:match($node,$regexp))">
+    <!-- xsl:if test="count($node) &gt;= 1 and not(regexp:match($node,$regexp))">
       <xsl:choose>
         <xsl:when test="$isError">
           <xsl:call-template name="rejectCall">
@@ -380,26 +358,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
           </xsl:call-template>
         </xsl:otherwise>
       </xsl:choose>
-    </xsl:if> -->
-	
-                <xsl:if test="count($node) &gt;= 1 and not(regex:match($node, $regexp,'!'))">
-                    <xsl:choose>
-                        <xsl:when test="$isError">
-                            <xsl:call-template name="rejectCall">
-                                <xsl:with-param name="errorCode" select="$errorCodeValidate" />
-                                <xsl:with-param name="errorMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
-                            </xsl:call-template>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            
-                            <xsl:call-template name="addWarning">
-                                <xsl:with-param name="warningCode" select="$errorCodeValidate" />
-                                <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
-                            </xsl:call-template>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:if>
-	
+    </xsl:if -->
   </xsl:template>
   <!-- Template que sirve para validar un nodo y si el nodo contiene un monto de 12 enteros 10 decimales y es mayor a cero -->
   <!-- Se debe de usar para elementos opcionales -->
@@ -623,16 +582,12 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="valorPropiedad"/>
     <xsl:param name="descripcion" select="''"/>
     <xsl:param name="isError" select="true()"/>
-    <!-- INI SFS <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
-	<xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
+    <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
     <xsl:variable name="dynEval" select="concat('document(',$apos,$url_catalogo,$apos,')/l/c[', $vCondition, ']')"/>
     <!-- xsl:if test="count(document('local:///commons/cpe/catalogo/cat_22.xml')/l/c[@id=$idCatalogo and @tasa=$valorPropiedad]) &lt; 1 " -->
-	
-	<xsl:if test="count($idCatalogo) &gt;= 1 and count(document($url_catalogo)/l/c[@id=$idCatalogo and @gre-r=$valorPropiedad]) &lt; 1 ">
-	
-    <!-- <xsl:if test="count(dyn:evaluate($dynEval)) &lt; 1 "> -->
+    <xsl:if test="count(dyn:evaluate($dynEval)) &lt; 1 ">
       <xsl:choose>
         <xsl:when test="$isError">
           <xsl:call-template name="rejectCall">
@@ -649,112 +604,6 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
       </xsl:choose>
     </xsl:if>
   </xsl:template>
-  
-  <xsl:template name="findElementInCatalog61rProperty">
-    <xsl:param name="errorCodeValidate"/>
-    <xsl:param name="idCatalogo"/>
-    <xsl:param name="catalogo"/>
-    <xsl:param name="propiedad"/>
-    <xsl:param name="valorPropiedad"/>
-    <xsl:param name="descripcion" select="''"/>
-    <xsl:param name="isError" select="true()"/>
-    
-	<!-- Inicio: SFS -->
-    <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
-	<xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
-
-    <xsl:variable name="apos">'</xsl:variable>
-    <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
-    <xsl:variable name="dynEval" select="concat('document(',$apos,$url_catalogo,$apos,')/l/c[', $vCondition, ']')"/>
-    <xsl:if test="count($idCatalogo) &gt;= 1 and count(document($url_catalogo)/l/c[@id=$idCatalogo and @gre-r=$valorPropiedad]) &lt; 1 ">
-      <xsl:choose>
-        <xsl:when test="$isError">
-          <xsl:call-template name="rejectCall">
-            <xsl:with-param name="errorCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="errorMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="addWarning">
-            <xsl:with-param name="warningCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
-  </xsl:template> 
-  
-  <xsl:template name="findElementInCatalog61tProperty">
-    <xsl:param name="errorCodeValidate"/>
-    <xsl:param name="idCatalogo"/>
-    <xsl:param name="catalogo"/>
-    <xsl:param name="propiedad"/>
-    <xsl:param name="valorPropiedad"/>
-    <xsl:param name="descripcion" select="''"/>
-    <xsl:param name="isError" select="true()"/>
-    
-	<!-- Inicio: SFS -->
-    <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
-	<xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
-
-    <xsl:variable name="apos">'</xsl:variable>
-    <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
-    <xsl:variable name="dynEval" select="concat('document(',$apos,$url_catalogo,$apos,')/l/c[', $vCondition, ']')"/>
-    <xsl:if test="count($idCatalogo) &gt;= 1 and count(document($url_catalogo)/l/c[@id=$idCatalogo and @gre-t=$valorPropiedad]) &lt; 1 ">
-      <xsl:choose>
-        <xsl:when test="$isError">
-          <xsl:call-template name="rejectCall">
-            <xsl:with-param name="errorCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="errorMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="addWarning">
-            <xsl:with-param name="warningCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
-  </xsl:template>   
-  
-  <xsl:template name="findElementInCatalogGREUbigeoProperty">
-    <xsl:param name="errorCodeValidate"/>
-    <xsl:param name="idCatalogo"/>
-    <xsl:param name="catalogo"/>
-    <xsl:param name="propiedad"/>
-    <xsl:param name="valorPropiedad"/>
-    <xsl:param name="descripcion" select="''"/>
-    <xsl:param name="isError" select="true()"/>
-    
-	  <!-- Inicio: SFS -->
-    <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
-    <xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
-
-    <xsl:variable name="apos">'</xsl:variable>
-    <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
-    <xsl:variable name="dynEval" select="concat('document(',$apos,$url_catalogo,$apos,')/l/c[', $vCondition, ']')"/>
-    <xsl:if test="count($idCatalogo) &gt;= 1 and count(document($url_catalogo)/l/c[@id=$idCatalogo and @ubigeo=$valorPropiedad]) &lt; 1 ">
-      <xsl:choose>
-        <xsl:when test="$isError">
-          <xsl:call-template name="rejectCall">
-            <xsl:with-param name="errorCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="errorMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="addWarning">
-            <xsl:with-param name="warningCode" select="$errorCodeValidate"/>
-            <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate ,' Valor no se encuentra en el catalogo: ',$catalogo,', ID: ', $idCatalogo, '  (nodo: &quot;',name($idCatalogo/parent::*),'/', name($idCatalogo), '&quot; propiedad ',$propiedad,': &quot;', $valorPropiedad, '&quot;)')"/>
-          </xsl:call-template>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:if>
-  </xsl:template> 
-  
   <!-- INI PAS20165E210300216 wsandovalh Template para obtener el valor de un atributo de un tag dentro de un catalogo -->
   <xsl:template name="getValueInCatalogProperty">
     <xsl:param name="idCatalogo"/>
@@ -790,35 +639,6 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
       </xsl:choose>
     </xsl:if>
   </xsl:template>
-  
-  <!-- PAS20221U210700304-INI-EBV -->
-    <xsl:template name="isTrueExpresionEmptyNode">
-        <xsl:param name="errorCodeValidate" />
-        <xsl:param name="expresion" />
-        <xsl:param name="isError" select="true()"/>
-        <xsl:param name="descripcion" select="'INFO '"/>
-        <xsl:param name="line" select="'0'"/>
-        
-        <xsl:if test="$expresion = true()">
-            <xsl:choose>
-                <xsl:when test="$isError">    
-                    <xsl:call-template name="rejectCall">
-                        <xsl:with-param name="errorCode" select="$errorCodeValidate" />
-                        <xsl:with-param name="errorMessage" select="concat($descripcion,': ', $errorCodeValidate)" />
-                    </xsl:call-template>
-                </xsl:when>
-                <xsl:otherwise>   
-                    <xsl:call-template name="addWarning">
-                        <xsl:with-param name="warningCode" select="$errorCodeValidate" />
-                        <xsl:with-param name="warningMessage" select="concat($descripcion,': ', $errorCodeValidate)" />
-                        <xsl:with-param name="warningLine" select="$line" />
-                    </xsl:call-template>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:if>
-        
-    </xsl:template>
-    <!-- PAS20221U210700304-FIN-EBV -->
   <xsl:template name="isTrueExpresionIfExist">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="node"/>
@@ -987,12 +807,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     </xsl:variable>
     <xsl:value-of select="$certSerialExaDecimal"/>
   </xsl:template>
-  <!--
-  <func:function name="gemfunc:is-blank">
-    <xsl:param name="data" select="''"/>
-    <func:result select="regexp:match($data,'^[\s]*$')"/>
-  </func:function>-->
-  
+
   <xsl:template name="findElementInCatalogPropertyxComponente">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="idCatalogo"/>

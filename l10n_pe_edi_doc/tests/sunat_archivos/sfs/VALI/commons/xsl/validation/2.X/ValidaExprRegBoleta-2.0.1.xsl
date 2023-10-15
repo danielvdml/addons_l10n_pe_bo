@@ -9,8 +9,7 @@
     xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" 
     xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" 
     xmlns:dp="http://www.datapower.com/extensions" 
-    xmlns:date="http://exslt.org/dates-and-times"
-    extension-element-prefixes="dp" exclude-result-prefixes="dp" version="1.0">
+    xmlns:date="http://exslt.org/dates-and-times">
     
 	<!-- <xsl:include href="local:///commons/error/validate_utils.xsl" dp:ignore-multiple="yes" /> -->
 	<xsl:include href="sunat_archivos/sfs/VALI/commons/error/validate_utils.xsl"
