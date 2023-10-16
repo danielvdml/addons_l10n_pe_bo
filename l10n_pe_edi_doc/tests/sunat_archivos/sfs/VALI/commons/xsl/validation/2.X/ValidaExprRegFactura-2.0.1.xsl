@@ -2,7 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:regexp="http://exslt.org/regular-expressions" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:dp="http://www.datapower.com/extensions" xmlns:date="http://exslt.org/dates-and-times" >
 	<!-- <xsl:include href="local:///commons/error/validate_utils.xsl" dp:ignore-multiple="yes" /> -->
 	
-	<xsl:include href="/mnt/addons_l10n_pe_bo/l10n_pe_edi_doc/tests/sunat_archivos/sfs/VALI/commons/error/validate_utils.xsl" />
+	<xsl:include href="../../../error/validate_utils.xsl" />
 
 	<!-- key Documentos Relacionados Duplicados -->
 	<xsl:key name="by-document-despatch-reference" match="*[local-name()='Invoice']/cac:DespatchDocumentReference" use="concat(cbc:DocumentTypeCode,' ', cbc:ID)"/>
@@ -975,7 +975,7 @@
 			<xsl:with-param name="errorCodeNotExist" select="'2014'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyIdentification/cbc:ID"/>
 		</xsl:call-template>
-		<xsl:if test="cac:Party/cac:PartyIdentification/cbc:ID != '-'">
+		<xsl:if test="true()">
 			<xsl:choose>
 				<xsl:when test="cac:Party/cac:PartyIdentification/cbc:ID/@schemeID ='6'">
 					<!--  Si "Tipo de documento de identidad del adquiriente" es 6, el formato del Tag UBL es diferente a numérico de 11 dígitos	ERROR 2017 -->
@@ -5105,8 +5105,18 @@
 	<!-- =========================================================================================================================================== =========================================== fin cac:PrepaidPayment =========================================== =========================================================================================================================================== -->
 	<!-- =========================================================================================================================================== =========================================== Template cac:PaymentTerms =========================================== =========================================================================================================================================== -->
 	<xsl:template match="cac:PaymentTerms">
+		<xsl:param name="root"/>
 		<xsl:param name="tipoOperacion" select="'-'"/>
-		<xsl:if test="cbc:PaymentMeansID">
+		<xsl:param name="conError" select = "false()" />
+		<!-- Version 5 excel - JRGS--> 
+		<xsl:if test="$tipoOperacion !='1001' and $tipoOperacion !='1002' and $tipoOperacion !='1003' and $tipoOperacion !='1004'">
+			<xsl:call-template name="isTrueExpresion">
+				<xsl:with-param name="errorCodeValidate" select="'3128'" />
+				<xsl:with-param name="node" select="cbc:ID" />
+				<xsl:with-param name="expresion" select="cbc:ID/text() = 'Detraccion'" />
+			</xsl:call-template>
+		</xsl:if>
+		<!--<xsl:if test="cbc:PaymentMeansID">
 			<xsl:call-template name="findElementInCatalog">
 				<xsl:with-param name="errorCodeValidate" select="'3033'"/>
 				<xsl:with-param name="idCatalogo" select="cbc:PaymentMeansID"/>
@@ -5122,13 +5132,127 @@
 				<xsl:with-param name="node" select="cbc:Amount/@currencyID"/>
 				<xsl:with-param name="regexp" select="'^(PEN)$'"/>
 			</xsl:call-template>
-			<!--<xsl:call-template name="findElementInCatalogProperty"><xsl:with-param name="catalogo" select="'54'"/><xsl:with-param name="propiedad" select="tasa"/><xsl:with-param name="idCatalogo" select="cbc:PaymentMeansID"/><xsl:with-param name="valorPropiedad" select="cbc:PaymentPercent"/><xsl:with-param name="errorCodeValidate" select="'3062'"/></xsl:call-template>-->
+			<xsl:call-template name="findElementInCatalogProperty"><xsl:with-param name="catalogo" select="'54'"/><xsl:with-param name="propiedad" select="tasa"/><xsl:with-param name="idCatalogo" select="cbc:PaymentMeansID"/><xsl:with-param name="valorPropiedad" select="cbc:PaymentPercent"/><xsl:with-param name="errorCodeValidate" select="'3062'"/></xsl:call-template>
+		</xsl:if>--> 
+		<!-- MIGE-JRGS - GMU-PAS20211U2107000121-->
+		<xsl:call-template name="isTrueExpresion">
+			<xsl:with-param name="errorCodeValidate" select="'3248'" />
+			<xsl:with-param name="node" select="cbc:PaymentMeansID" />
+			<xsl:with-param name="expresion" select="count(key('by-cuotas-in-root', cbc:PaymentMeansID)) &gt; 1" />
+			<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+			<xsl:with-param name="descripcion" select="concat('Forma Pago : ', cac:PaymentTerms/cbc:PaymentMeansID)"/>
+		</xsl:call-template>  
+  		
+		<xsl:if test="cbc:ID and cbc:ID='FormaPago'">    
+			<xsl:call-template name="existElementNoVacio">
+				<xsl:with-param name="errorCodeNotExist" select="'3245'"/>
+				<xsl:with-param name="node" select="cbc:PaymentMeansID"/>
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+			</xsl:call-template>		
+			<xsl:call-template name="regexpValidateElementIfExist">
+				<xsl:with-param name="errorCodeValidate" select="'3246'"/>
+				<xsl:with-param name="node" select="cbc:PaymentMeansID"/>
+				<xsl:with-param name="regexp" select="'^((Contado)|(Credito)|(Cuota[0-9]{3}))$'"/>
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+			</xsl:call-template>
+			<xsl:if test="cbc:PaymentMeansID = 'Credito'">
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3249'" />
+					<xsl:with-param name="node" select="cac:PaymentTerms/cbc:ID" />
+					<xsl:with-param name="expresion" select="count(cac:PaymentTerms[cbc:ID[text() = 'FormaPago'] and cbc:PaymentMeansID[substring(text(),1,5) = 'Cuota']]) = 0" />
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				</xsl:call-template>
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3251'"/>
+					<xsl:with-param name="node" select="cbc:Amount"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				</xsl:call-template>		  
+				<xsl:call-template name="validateValueTwoDecimalIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3250'"/>
+					<xsl:with-param name="node" select="cbc:Amount"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				</xsl:call-template>			
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3265'" />
+					<xsl:with-param name="node" select="cbc:Amount" />
+					<xsl:with-param name="expresion" select="cac:LegalMonetaryTotal/cbc:PayableAmount &lt; cbc:Amount" />
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				</xsl:call-template>       
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2071'" />
+					<xsl:with-param name="node" select="cbc:Amount/@currencyID" />
+					<xsl:with-param name="expresion" select="$root/cbc:DocumentCurrencyCode != cbc:Amount/@currencyID" />
+					<xsl:with-param name="isError" select ="boolean(number(1))"/>
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	
+			</xsl:if>
+			<xsl:if test="substring(cbc:PaymentMeansID,1,5) = 'Cuota'">
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3252'" />
+					<xsl:with-param name="node" select="cac:PaymentTerms/cbc:ID" />
+					<xsl:with-param name="expresion" select="count(cac:PaymentTerms[cbc:ID[text() = 'FormaPago'] and cac:PaymentTerms/cbc:PaymentMeansID[text() = 'Credito' or substring(text(),1,5) = 'Cuota']]) &gt; 1" />
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	        				
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3254'"/>
+					<xsl:with-param name="node" select="cbc:Amount"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	
+				<xsl:call-template name="validateValueTwoDecimalIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3253'"/>
+					<xsl:with-param name="node" select="cbc:Amount"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	        	
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3266'" />
+					<xsl:with-param name="node" select="cbc:Amount" />
+					<xsl:with-param name="expresion" select="cac:LegalMonetaryTotal/cbc:PayableAmount &lt; cbc:Amount" />
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	
+				
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2071'" />
+					<xsl:with-param name="node" select="cbc:Amount/@currencyID" />
+					<xsl:with-param name="expresion" select="$root/cbc:DocumentCurrencyCode != cbc:Amount/@currencyID" />
+					<xsl:with-param name="isError" select ="boolean(number(1))"/>
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	
+
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3256'"/>                                        
+					<xsl:with-param name="node" select="cbc:PaymentDueDate"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3255'" />
+					<xsl:with-param name="node" select="cbc:PaymentDueDate" />
+					<xsl:with-param name="regexp" select="'^[0-9]{4}-[0-9]{2}-[0-9]{2}?$'"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>	        
+				<xsl:variable name="fechaEmision" select="cbc:IssueDate" />
+				<xsl:variable name="fechaPago" select="cbc:PaymentDueDate" />                           
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3267'" />
+					<xsl:with-param name="node" select="cbc:PaymentDueDate" />
+					<xsl:with-param name="expresion" select="number(concat(substring($fechaEmision,1,4),substring($fechaEmision,6,2),substring($fechaEmision,9,2))) &gt; number(concat(substring($fechaPago,1,4),substring($fechaPago,6,2),substring($fechaPago,9,2)))" />
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+					<xsl:with-param name="descripcion" select="concat('Error en ', cbc:PaymentMeansID)"/>
+				</xsl:call-template>
+			</xsl:if>    
 		</xsl:if>
+		<!-- Fin MIGE -->
 		<xsl:if test="$tipoOperacion = '1002'">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'3129'"/>
 				<xsl:with-param name="node" select="cbc:PaymentMeansID"/>
 				<xsl:with-param name="expresion" select="cbc:PaymentMeansID/text() != '004'"/>
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
 			</xsl:call-template>
 		</xsl:if>
 		<xsl:if test="$tipoOperacion = '1003'">
@@ -5136,6 +5260,7 @@
 				<xsl:with-param name="errorCodeValidate" select="'3129'"/>
 				<xsl:with-param name="node" select="cbc:PaymentMeansID"/>
 				<xsl:with-param name="expresion" select="cbc:PaymentMeansID/text() != '028'"/>
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
 			</xsl:call-template>
 		</xsl:if>
 		<xsl:if test="$tipoOperacion = '1004'">
@@ -5143,6 +5268,7 @@
 				<xsl:with-param name="errorCodeValidate" select="'3129'"/>
 				<xsl:with-param name="node" select="cbc:PaymentMeansID"/>
 				<xsl:with-param name="expresion" select="cbc:PaymentMeansID/text() != '027'"/>
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
 			</xsl:call-template>
 		</xsl:if>
 		<xsl:call-template name="regexpValidateElementIfExist">

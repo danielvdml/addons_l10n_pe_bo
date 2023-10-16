@@ -21,7 +21,7 @@
 	<xsl:template name="error">
 		<xsl:param name="codigo" />
 		<!-- <xsl:variable name="descripcionError" select="document('local:///commo_ns/cpe/catalogo/CatalogoErrores.xml')" /> -->
-		<xsl:variable name="descripcionError" select="document('/mnt/addons_l10n_pe_bo/l10n_pe_edi_doc/tests/sunat_archivos/sfs/VALI/commons/cpe/catalogo/CatalogoErrores.xml')" />
+		<xsl:variable name="descripcionError" select="document('../../../VALI/commons/cpe/catalogo/CatalogoErrores.xml')" />
 		<xsl:value-of select="$descripcionError/catalogoerrores/error[@numero=$codigo]" />
 	</xsl:template>
 	
