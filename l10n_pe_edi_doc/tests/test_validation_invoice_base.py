@@ -7,6 +7,7 @@ import lxml
 import re
 from odoo.modules import get_module_resource
 import logging
+from datetime import datetime
 _logger = logging.getLogger(__name__)
 ns = etree.FunctionNamespace('http://mydomain.org/myother/functions')
 ns.prefix = 'es'
@@ -32,8 +33,11 @@ def matches(context, _input, patterns, flags=0):
         return bool(re.match(patterns,_input))
     else:
         return all([bool(re.match(pattern,_input)) for pattern in patterns])
-        
 
+def currentDate(context):
+    return datetime.today().date().strftime("%Y%M%d")
+
+ns["current-date"] = currentDate
 ns['matches'] = matches
 
 @tagged('post_install','-at_install')

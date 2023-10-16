@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:regexp="http://exslt.org/regular-expressions" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:dp="http://www.datapower.com/extensions" xmlns:date="http://exslt.org/dates-and-times" >
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	xmlns:regexp="http://exslt.org/regular-expressions" 
+	xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" 
+	xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+	xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" 
+	xmlns:sac="urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1" 
+	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" 
+	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" 
+	xmlns:dp="http://www.datapower.com/extensions" 
+	xmlns:date="http://exslt.org/dates-and-times" 
+	xmlns:es="http://mydomain.org/myother/functions">
 	<!-- <xsl:include href="local:///commons/error/validate_utils.xsl" dp:ignore-multiple="yes" /> -->
 	
 	<xsl:include href="../../../error/validate_utils.xsl" />
@@ -18,6 +29,8 @@
 	<!-- key identificador de prepago duplicados -->
 	<xsl:key name="by-idprepaid-in-root" match="*[local-name()='Invoice']/cac:PrepaidPayment" use="cbc:ID"/>
 	<xsl:key name="by-document-additional-anticipo" match="*[local-name()='Invoice']/cac:AdditionalDocumentReference[cbc:DocumentTypeCode[text() = '02' or text() = '03']]" use="cbc:DocumentStatusCode"/>
+	<!-- key identificador de forma de pago duplicadas MIGE-JRGS-->
+    <xsl:key name="by-cuotas-in-root" match="*[local-name()='Invoice']/cac:PaymentTerms[cbc:ID[text() = 'FormaPago']]" use="cbc:PaymentMeansID"/>
 	<!-- SFS -->
 	<xsl:param name="nombreArchivoEnviado"/>
 	<xsl:template match="/*">
@@ -30,6 +43,19 @@
 		<xsl:variable name="numeroSerie" select="substring($nombreArchivoEnviado, 16, 4)"/>
 		<xsl:variable name="numeroComprobante" select="substring($nombreArchivoEnviado, 21, string-length($nombreArchivoEnviado) - 24)"/>
 		<!-- FIN SFS 1.1 -->
+		<!-- MIGE-JRGS Variable para controlar comportamiento ERR/OBS --> 
+		<xsl:variable name="datosCpeNodo" select="20210401" />
+		<xsl:variable name="currentdate" select="es:current-date()" />		
+        <xsl:variable name="conError">
+          <xsl:choose>
+            <xsl:when test="number(concat(substring($currentdate,1,4),substring($currentdate,6,2),substring($currentdate,9,2))) &lt; 20210401">
+               <xsl:value-of select="'0'" />
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:value-of select="'1'" />
+            </xsl:otherwise>
+          </xsl:choose> 
+        </xsl:variable>	
 		<!-- Esta validacion se hace de manera general -->
 		<!-- Numero de RUC del nombre del archivo no coincide con el consignado en el contenido del archivo XML-->
 		<xsl:call-template name="isTrueExpresion">
@@ -85,12 +111,12 @@
 			<!-- Pase126 Contingencia js 260718 <xsl:with-param name="regexp" select="'^[F][A-Z0-9]{3}-[0-9]{1,8}?$'"/> -->
 			<xsl:with-param name="regexp" select="'^([F][A-Z0-9]{3}|[0-9]{4})-[0-9]{1,8}?$'"/>
 		</xsl:call-template><!-- ================================== Verificar con el flujo o con Java ============================================================= -->
-		<!-- cbc:ID El número de serie del Tag UBL es diferente al número de serie del archivo ERROR 1035 -->
-		<!--  El número de comprobante del Tag UBL es diferente al número de comprobante del archivo ERROR 1036 -->
+		<!-- cbc:ID El n�mero de serie del Tag UBL es diferente al n�mero de serie del archivo ERROR 1035 -->
+		<!--  El n�mero de comprobante del Tag UBL es diferente al n�mero de comprobante del archivo ERROR 1036 -->
 		<!--  El valor del Tag UBL se encuentra en el listado con indicador de estado igual a 0 o 1 ERROR 1033 -->
 		<!--  El valor del Tag UBL se encuentra en el listado con indicador de estado igual a 2 ERROR 1032 -->
-		<!-- cbc:IssueDate La diferencia entre la fecha de recepción del XML y el valor del Tag UBL es mayor al límite del listado ERROR 2108 -->
-		<!--  El valor del Tag UBL es mayor a dos días de la fecha de envío del comprobante ERROR 2329 -->
+		<!-- cbc:IssueDate La diferencia entre la fecha de recepci�n del XML y el valor del Tag UBL es mayor al l�mite del listado ERROR 2108 -->
+		<!--  El valor del Tag UBL es mayor a dos d�as de la fecha de env�o del comprobante ERROR 2329 -->
 		<!-- cbc:InvoiceTypeCode No existe el Tag UBL ERROR 1004 (Verificar que el error ocurra)-->
 		<!--  El valor del Tag UBL es diferente al tipo de documento del archivo ERROR 1003 -->
 		<xsl:call-template name="existAndRegexpValidateElement">
@@ -128,7 +154,7 @@
 			<xsl:with-param name="idCatalogo" select="cbc:DocumentCurrencyCode"/>
 			<xsl:with-param name="catalogo" select="'02'"/>
 		</xsl:call-template>
-		<!--  La moneda de los totales de línea y totales de comprobantes (excepto para los totales de Percepción (2001) y Detracción (2003)) es diferente al valor del Tag UBL ERROR 2071 -->
+		<!--  La moneda de los totales de l�nea y totales de comprobantes (excepto para los totales de Percepci�n (2001) y Detracci�n (2003)) es diferente al valor del Tag UBL ERROR 2071 -->
 		<!-- PAS20191U210000012 -->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'2071'"/>
@@ -157,6 +183,8 @@
 		<!-- =========================================================================================================================================== Datos del Emisor =========================================================================================================================================== -->
 		<xsl:apply-templates select="cac:AccountingSupplierParty">
 			<xsl:with-param name="tipoOperacion" select="$tipoOperacion"/>
+			<!--Excel v6 PAS20211U210400011 JRGS- Se agrega parametro-->
+			<xsl:with-param name="root" select="."/>
 		</xsl:apply-templates>
 		<xsl:apply-templates select="cac:Delivery/cac:DeliveryLocation/cac:Address">
 			<xsl:with-param name="tipoOperacion" select="$tipoOperacion"/>
@@ -171,8 +199,8 @@
 		<xsl:apply-templates select="cac:DespatchDocumentReference"/>
 		<xsl:apply-templates select="cac:AdditionalDocumentReference"/>
 		<!-- =========================================================================================================================================== Documentos de referencia =========================================================================================================================================== -->
-		<!-- =========================================================================================================================================== Datos del detalle o Ítem de la Factura =========================================================================================================================================== -->
-		<!--  cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReasonCode Si "Código de tributo por línea" es 1000 (IGV) y el valor del Tag UBL es "40" (Exportación), no debe haber otro "Afectación a IGV por la línea" diferente a "40" ERROR 2655<xsl:variable name="afectacionIgvExportacion" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode[text() = '40'])"/><xsl:variable name="afectacionIgvNoExportacion" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode[text() != '40'])"/><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2655'" /><xsl:with-param name="node" select="cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode" /><xsl:with-param name="expresion" select="($afectacionIgvExportacion > 0) and ($afectacionIgvNoExportacion > 0)" /></xsl:call-template>-->
+		<!-- =========================================================================================================================================== Datos del detalle o �tem de la Factura =========================================================================================================================================== -->
+		<!--  cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReasonCode Si "C�digo de tributo por l�nea" es 1000 (IGV) y el valor del Tag UBL es "40" (Exportaci�n), no debe haber otro "Afectaci�n a IGV por la l�nea" diferente a "40" ERROR 2655<xsl:variable name="afectacionIgvExportacion" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode[text() = '40'])"/><xsl:variable name="afectacionIgvNoExportacion" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode[text() != '40'])"/><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2655'" /><xsl:with-param name="node" select="cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID='1000']/cbc:TaxExemptionReasonCode" /><xsl:with-param name="expresion" select="($afectacionIgvExportacion > 0) and ($afectacionIgvNoExportacion > 0)" /></xsl:call-template>-->
 		<xsl:apply-templates select="cac:InvoiceLine">
 			<xsl:with-param name="root" select="."/>
 		</xsl:apply-templates>
@@ -184,6 +212,25 @@
 				<xsl:with-param name="expresion" select="count(cac:InvoiceLine/cac:Item/cac:CommodityClassification/cbc:ItemClassificationCode[text() = '84121901' or text() = '80131501']) = 0"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!--Excel v6 PAS20211U210400011 JRGS-->
+        <!-- Error en validacion de empresas financieras -->
+		<xsl:if test="$tipoOperacion = '2100' or $tipoOperacion = '2101' or $tipoOperacion = '2102'">
+			<xsl:call-template name="isTrueExpresion">
+				<xsl:with-param name="errorCodeValidate" select="'3241'" />
+	            <xsl:with-param name="node" select="cac:InvoiceLine/cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '0000']" />
+	            <xsl:with-param name="expresion" select="count(cac:InvoiceLine[count(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7004' or text() = '7005' or text() = '7012']) = 3]) &lt; 1" />
+	            <xsl:with-param name="descripcion" select="concat(' cac:AdditionalItemProperty/cbc:NameCode ', cac:AdditionalItemProperty/cbc:NameCode)"/>				
+	        </xsl:call-template>
+        </xsl:if>
+        <!-- Error en validacion de empresas seguros -->
+		<xsl:if test="$tipoOperacion = '2104'">
+        	<xsl:call-template name="isTrueExpresion">
+	            <xsl:with-param name="errorCodeValidate" select="'3242'" />
+	            <xsl:with-param name="node" select="cac:InvoiceLine/cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '0000']" />
+	            <xsl:with-param name="expresion" select="count(cac:InvoiceLine[count(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7015']) = 1]) &lt; 1" />
+	            <xsl:with-param name="descripcion" select="concat(' cac:AdditionalItemProperty/cbc:NameCode ', cac:AdditionalItemProperty/cbc:NameCode)"/>
+			</xsl:call-template>
+        </xsl:if>
 		<!-- =========================================================================================================================================== Datos del detalle o Item de la Factura =========================================================================================================================================== -->
 		<!-- =========================================================================================================================================== Totales de la Factura =========================================================================================================================================== -->
 		<!-- ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sac:AdditionalInformation El Tag UBL no debe repetirse en el /Invoice ERROR 2427<xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2427'" /><xsl:with-param name="node" select="ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sac:AdditionalInformation" /><xsl:with-param name="expresion" select="count(ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sac:AdditionalInformation) &gt; 1" /></xsl:call-template>-->
@@ -208,6 +255,12 @@
 			<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:PayableAmount"/>
 			<xsl:with-param name="isGreaterCero" select="false()"/>
 		</xsl:call-template>
+		<!-- Excel v6 PAS20211U210400011 JRGS-->
+		<xsl:call-template name="existElementNoVacio">
+			<xsl:with-param name="errorCodeNotExist" select="'4212'"/>
+			<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:LineExtensionAmount"/>
+			<xsl:with-param name="isError" select ="false()"/>
+		</xsl:call-template> 
 		<xsl:call-template name="validateValueTwoDecimalIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'2031'"/>
 			<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:LineExtensionAmount"/>
@@ -225,10 +278,11 @@
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
 		<xsl:call-template name="isTrueExpresion">
-			<xsl:with-param name="errorCodeValidate" select="'4315'"/>
+		<!--xsl:with-param name="errorCodeValidate" select="'4315'" /-->
+            <xsl:with-param name="errorCodeValidate" select="'2071'" />
 			<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:PayableRoundingAmount/@currencyID"/>
 			<xsl:with-param name="expresion" select="cac:LegalMonetaryTotal/cbc:PayableRoundingAmount/@currencyID != $monedaComprobante"/>
-			<xsl:with-param name="isError" select="false()"/>
+			<!--xsl:with-param name="isError" select ="false()"/-->
 		</xsl:call-template>
 		<!-- Tributos duplicados por cabecera<xsl:apply-templates select="cac:TaxTotal/cac:TaxSubtotal" mode="cabecera"/>-->
 		<!--  Debe existir en el cac:InvoiceLine un bloque TaxTotal ERROR 2956 -->
@@ -257,6 +311,40 @@
 				<xsl:with-param name="expresion" select="not(cac:AllowanceCharge/cbc:AllowanceChargeReasonCode[text() ='51' or text()='52' or text()='53'])"/>
 			</xsl:call-template>
 		</xsl:if>
+		
+		<!--PAS20221U210700304-EBV INI 3462-->
+        <xsl:variable name="igv10" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[
+		cac:TaxCategory/cbc:Percent = 10.0 and 
+		((cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000'] and cbc:TaxableAmount &gt; 0) or
+		(cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9996'] and cbc:TaxableAmount &gt; 0 and 
+		cac:TaxCategory/cbc:TaxExemptionReasonCode[text() = '11' or text() = '12' or text() = '13' or text() = '14' or text() = '15' or text() = '16']))
+		])"/>
+        
+        <xsl:variable name="igv18" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[
+		cac:TaxCategory/cbc:Percent = 18.0 and
+		((cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000'] and cbc:TaxableAmount &gt; 0) or 
+		(cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9996'] and cbc:TaxableAmount &gt; 0 and 
+		cac:TaxCategory/cbc:TaxExemptionReasonCode[text() = '11' or text() = '12' or text() = '13' or text() = '14' or text() = '15' or text() = '16']))
+		])"/>
+		
+		<xsl:variable name="igvX" select="count(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[
+		cac:TaxCategory/cbc:Percent != 18.0 and cac:TaxCategory/cbc:Percent != 10.0 and
+		((cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000'] and cbc:TaxableAmount &gt; 0) or 
+		(cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9996'] and cbc:TaxableAmount &gt; 0 and 
+		cac:TaxCategory/cbc:TaxExemptionReasonCode[text() = '11' or text() = '12' or text() = '13' or text() = '14' or text() = '15' or text() = '16']))
+		])"/>
+		
+		<xsl:variable name="sumatoriaIndicador1" select="sum(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxableAmount)"/>
+		<xsl:variable name="sumatoriaIndicador2" select="sum(cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9996'] and cac:TaxCategory/cbc:TaxExemptionReasonCode[text() = '11' or text() = '12' or text() = '13' or text() = '14' or text() = '15' or text() = '16']]/cbc:TaxableAmount)"/>
+
+        <xsl:if test="($sumatoriaIndicador1 > 0) or ($sumatoriaIndicador2 > 0)">
+		    <xsl:call-template name="isTrueExpresionEmptyNode">
+	            <xsl:with-param name="errorCodeValidate" select="'3462'" />
+	            <xsl:with-param name="expresion" select="(($igv10 > 0) and ($igv18 > 0)) or (($igv10 = 0) and ($igv18 = 0)) or ($igvX > 0)" />
+	        </xsl:call-template>
+        </xsl:if>
+        <!--PAS20221U210700304-EBV FIN 3462-->
+		
 		<xsl:variable name="descuentosGlobalesNOAfectaBI" select="sum(cac:AllowanceCharge[cbc:AllowanceChargeReasonCode[text() = '03']]/cbc:Amount)"/>
 		<xsl:variable name="descuentosxLineaNOAfectaBI" select="sum(cac:InvoiceLine/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode[text() = '01']]/cbc:Amount)"/>
 		<xsl:variable name="totalDescuentos" select="sum(cac:LegalMonetaryTotal/cbc:AllowanceTotalAmount)"/>
@@ -289,11 +377,90 @@
 		<xsl:variable name="DescuentoGlobalesAfectaBI" select="sum(cac:AllowanceCharge[cbc:AllowanceChargeReasonCode[text() = '02']]/cbc:Amount)"/>
 		<xsl:variable name="cargosGlobalesAfectaBI" select="sum(cac:AllowanceCharge[cbc:AllowanceChargeReasonCode[text() = '49']]/cbc:Amount)"/>
 		<xsl:variable name="totalValorVentaCalculado" select="$totalValorVentaxLinea - $DescuentoGlobalesAfectaBI + $cargosGlobalesAfectaBI"/>
-		<xsl:variable name="totalPrecioVentaCalculadoIGV" select="$totalValorVenta + $SumatoriaISC + $SumatoriaICBPER + $SumatoriaOtrosTributos + ($MontoBaseIGVLinea - $MontoDescuentoAfectoBI + $MontoCargosAfectoBI) * 0.18"/>
+		
 		<xsl:variable name="totalPrecioVentaCalculadoIVAP" select="$totalValorVenta + $SumatoriaICBPER + $SumatoriaOtrosTributos + ($MontoBaseIVAPLinea - $MontoDescuentoAfectoBI + $MontoCargosAfectoBI) * 0.04"/>
 		<xsl:variable name="totalPrecioVentaCalculadoSinIgvSinIVAP" select="$totalValorVenta + $SumatoriaISC + $SumatoriaICBPER + $SumatoriaOtrosTributos"/>
-		<xsl:variable name="SumatoriaIGVCalculado" select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo + $MontoCargosAfectoBI) * 0.18"/>
+		
+		<!-- PAS20221U210700304 - Comentamos SumatoriaIGVCalculado ya que se usará 18% y 10% para el calculo-->
+		<!-- <xsl:variable name="SumatoriaIGVCalculado" select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo + $MontoCargosAfectoBI) * 0.18"/> -->
 		<xsl:variable name="SumatoriaIVAPCalculado" select="($MontoBaseIVAPLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo + $MontoCargosAfectoBI) * 0.04"/>
+		
+		<!-- PAS20221U210700304(Traslado) - Excel v7 - Se agrega variable de anticipos ISC y se considera en el calculo del totalPrecioVentaCalculadoIGV -->
+        <xsl:variable name="AnticiposISC" select="sum(cac:AllowanceCharge[cbc:AllowanceChargeReasonCode[text() = '20']]/cbc:Amount)"/>
+
+		<!-- PAS20221U210700304-EBV INICIO - 3279- La tasa es del primer item tipo 1000-->
+        <xsl:variable name="TasaPercent">
+	        <xsl:choose>
+			   <xsl:when test="cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:Percent
+			   					and cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID = '1000']/cbc:TaxableAmount &gt; 0">
+	             <xsl:value-of select="cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory[cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:Percent div 100" />
+	           </xsl:when>
+	           <xsl:otherwise>
+	             <xsl:text>0</xsl:text>
+	           </xsl:otherwise>
+	         </xsl:choose>
+	    </xsl:variable>
+        
+        <xsl:variable name="totalPrecioVentaCalculadoIGV" select="$totalValorVenta + $SumatoriaISC + $SumatoriaICBPER + $SumatoriaOtrosTributos + $AnticiposISC + ($MontoBaseIGVLinea - $MontoDescuentoAfectoBI + $MontoCargosAfectoBI) * $TasaPercent"/>
+       	<!-- PAS20221U210700304-EBV FIN - 3279 - La tasa es del primer item tipo 1000-->
+
+		<!-- PAS20221U210700304-EBV INICIO 3291 - Reincorporación considerando tasas 10% y 18% -->
+        <xsl:variable name="sumatoriaIGVCalculado18">
+          <xsl:choose>
+            <xsl:when test="$MontoBaseIGVLinea &gt; 0">
+               <xsl:value-of select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo - $AnticiposISC + $MontoCargosAfectoBI) * 0.18"/>
+            </xsl:when>
+            <xsl:otherwise>
+               <xsl:value-of select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo + $MontoCargosAfectoBI) * 0.18"/>
+            </xsl:otherwise>
+          </xsl:choose> 
+        </xsl:variable>
+        
+        <xsl:variable name="sumatoriaIGVCalculado10">
+		  <xsl:choose>
+		    <xsl:when test="$MontoBaseIGVLinea &gt; 0">
+		       <xsl:value-of select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo - $AnticiposISC + $MontoCargosAfectoBI) * 0.10"/>
+		    </xsl:when>
+		    <xsl:otherwise>
+		       <xsl:value-of select="($MontoBaseIGVLinea - $MontoDescuentoAfectoBI - $MontoDescuentoAfectoBIAnticipo + $MontoCargosAfectoBI) * 0.10"/>
+		    </xsl:otherwise>
+		  </xsl:choose>
+		</xsl:variable>
+		
+		<xsl:variable name="sumatoriaFinal">
+			<xsl:choose>
+				<xsl:when test="$TasaPercent = 0.18">
+					<xsl:value-of select="$sumatoriaIGVCalculado18"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="$sumatoriaIGVCalculado10"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		
+		<xsl:variable name="indicadorError18">
+		    <xsl:choose>
+		        <xsl:when test="($SumatoriaIGV + 1 ) &lt; $sumatoriaIGVCalculado18 or ($SumatoriaIGV - 1) &gt; $sumatoriaIGVCalculado18">
+		            <xsl:value-of select="1"/>
+		        </xsl:when>
+		        <xsl:otherwise>
+		            <xsl:value-of select="'0'"/>
+		        </xsl:otherwise>
+		    </xsl:choose>
+		</xsl:variable>
+		
+		<xsl:variable name="indicadorError10">
+			<xsl:choose>
+				<xsl:when test="($SumatoriaIGV + 1 ) &lt; $sumatoriaIGVCalculado10 or ($SumatoriaIGV - 1) &gt; $sumatoriaIGVCalculado10">
+					<xsl:value-of select="1"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="'0'"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>	       	
+        <!-- PAS20221U210700304-EBV FIN 3291 - Reincorporación considerando tasas 10% y 18% -->
+		
 		<!-- PAS20191U210000012 -->
 		<xsl:if test="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '7152']]">
 			<xsl:call-template name="isTrueExpresion">
@@ -303,14 +470,20 @@
 				<xsl:with-param name="isError" select="false()"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!-- PAS20221U210700304 - EBV - OBS-4290 pasa a ERR-3291 -->
 		<xsl:if test="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]">
-			<xsl:call-template name="isTrueExpresion">
-				<xsl:with-param name="errorCodeValidate" select="'4290'"/>
-				<xsl:with-param name="node" select="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxAmount"/>
-				<xsl:with-param name="expresion" select="($SumatoriaIGV + 1 ) &lt; $SumatoriaIGVCalculado or ($SumatoriaIGV - 1) &gt; $SumatoriaIGVCalculado"/>
-				<xsl:with-param name="isError" select="false()"/>
-			</xsl:call-template>
-		</xsl:if>
+				<xsl:call-template name="isTrueExpresion">
+		            <xsl:with-param name="errorCodeValidate" select="'3291'" />
+		            <xsl:with-param name="node" select="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxAmount" />
+		            <xsl:with-param name="expresion" select="not($indicadorError18 &gt; 0 and $indicadorError10 = 0) and not($indicadorError18 = 0 and $indicadorError10 &gt; 0) and not($indicadorError18 = 0 and $indicadorError10 = 0)" />
+		        </xsl:call-template>
+			    <xsl:call-template name="isTrueExpresion">
+		            <xsl:with-param name="errorCodeValidate" select="'3291'" />
+		            <xsl:with-param name="node" select="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxAmount" />
+		            <xsl:with-param name="expresion" select="($SumatoriaIGV + 1 ) &lt; $sumatoriaFinal or ($SumatoriaIGV - 1) &gt; $sumatoriaFinal" />
+		        </xsl:call-template>
+        </xsl:if>
+		<!-- PAS20221U210700304 - EBV - OBS-4290 pasa a ERR-3291 -->
 		<xsl:if test="cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1016']]">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'4302'"/>
@@ -344,7 +517,8 @@
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
 		<!-- Detalle de sumatoria -->
-		<xsl:if test="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount and cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxAmount &gt; 0">
+		<!--PAS20221U210700304-EBV-INI-Comentamos la observación 4310 para pasar a error 3279-->
+		<!--<xsl:if test="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount and cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxAmount &gt; 0">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'4310'"/>
 				<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount"/>
@@ -359,35 +533,59 @@
 				<xsl:with-param name="expresion" select="(round(($totalPrecioVenta + 1 ) * 100) div 100) &lt; (round($totalPrecioVentaCalculadoIVAP * 100) div 100) or  (round(($totalPrecioVenta - 1) * 100) div 100) &gt; (round($totalPrecioVentaCalculadoIVAP * 100) div 100)"/>
 				<xsl:with-param name="isError" select="false()"/>
 			</xsl:call-template>
-		</xsl:if>
+		</xsl:if> -->
 		<!--xsl:variable name="variableW" select="(round($totalPrecioVentaCalculadoSinIgvSinIVAP * 100) div 100)"/>	
 		<xsl:message terminate="yes" >
 			<xsl:value-of select="concat(' error: ', $variableW)" />
 		</xsl:message-->
 		<!-- Mgtc  != '1016' and text() != '1000' -->
-		<xsl:if test="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount and cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() != '1016' and text() != '1000']]/cbc:TaxAmount &gt; 0">
+		<!--<xsl:if test="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount and cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() != '1016' and text() != '1000']]/cbc:TaxAmount &gt; 0">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'4310'"/>
 				<xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount"/>
 				<xsl:with-param name="expresion" select="(round(($totalPrecioVenta + 1 ) * 100) div 100) &lt; (round($totalPrecioVentaCalculadoSinIgvSinIVAP * 100) div 100) or (round(($totalPrecioVenta - 1) * 100) div 100) &gt; (round($totalPrecioVentaCalculadoSinIgvSinIVAP * 100) div 100)"/>
 				<xsl:with-param name="isError" select="false()"/>
 			</xsl:call-template>
-		</xsl:if>
-		<!-- cac:TaxTotal/cbc:TaxAmount Si existe una línea con "Código de tributo por línea" igual a "2000" y "Monto ISC por línea" mayor a cero, el valor del Tag UBL es menor igual a 0 (cero) OBSERV 4020<xsl:variable name="detalleIscGreaterCero" select="cac:InvoiceLine/cac:TaxTotal[cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']/cbc:TaxAmount[text() &gt; 0] "/><xsl:if test="$detalleIscGreaterCero"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'4020'" /><xsl:with-param name="node" select="cac:TaxTotal/cbc:TaxAmount[../cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']" /><xsl:with-param name="expresion" select="not(cac:TaxTotal/cbc:TaxAmount[../cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000' and text() &gt; 0])" /><xsl:with-param name="isError" select ="false()"/></xsl:call-template></xsl:if>-->
+		</xsl:if> -->
+		<!--PAS20221U210700304-EBV-FIN-Comentamos la observación 4310 -->
+		
+		<!-- PAS20221U210700304-EBV INICIO 3279 - validación doble de 3279-->
+        <xsl:if test="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount">
+           <xsl:choose>
+              <xsl:when test="$MontoBaseIVAPLinea &gt; 0">
+                  <xsl:call-template name="isTrueExpresion">
+	                  <xsl:with-param name="errorCodeValidate" select="'3279'" />
+	                  <xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount" />
+	                  <xsl:with-param name="expresion" select="($totalPrecioVenta + 1 ) &lt; $totalPrecioVentaCalculadoIVAP or ($totalPrecioVenta - 1) &gt; $totalPrecioVentaCalculadoIVAP" />
+	                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+        			    <xsl:call-template name="isTrueExpresion">
+	                  <xsl:with-param name="errorCodeValidate" select="'3279'" />
+	                  <xsl:with-param name="node" select="cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount" />
+	                  <xsl:with-param name="expresion" select="($totalPrecioVenta + 1 ) &lt; $totalPrecioVentaCalculadoIGV or ($totalPrecioVenta - 1) &gt; $totalPrecioVentaCalculadoIGV" />
+
+	                </xsl:call-template>
+              </xsl:otherwise>
+           </xsl:choose>
+        </xsl:if>
+		<!-- PAS20221U210700304-EBV FIN 3279 - validación doble de 3279-->
+		
+		<!-- cac:TaxTotal/cbc:TaxAmount Si existe una l�nea con "C�digo de tributo por l�nea" igual a "2000" y "Monto ISC por l�nea" mayor a cero, el valor del Tag UBL es menor igual a 0 (cero) OBSERV 4020<xsl:variable name="detalleIscGreaterCero" select="cac:InvoiceLine/cac:TaxTotal[cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']/cbc:TaxAmount[text() &gt; 0] "/><xsl:if test="$detalleIscGreaterCero"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'4020'" /><xsl:with-param name="node" select="cac:TaxTotal/cbc:TaxAmount[../cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']" /><xsl:with-param name="expresion" select="not(cac:TaxTotal/cbc:TaxAmount[../cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID='2000' and text() &gt; 0])" /><xsl:with-param name="isError" select ="false()"/></xsl:call-template></xsl:if>-->
 		<!-- =========================================================================================================================================== Fin Totales de la Factura =========================================================================================================================================== -->
-		<!-- =========================================================================================================================================== Información Adicional  - Anticipos =========================================================================================================================================== -->
+		<!-- =========================================================================================================================================== Informaci�n Adicional  - Anticipos =========================================================================================================================================== -->
 		<xsl:apply-templates select="cac:PrepaidPayment" mode="cabecera">
 			<xsl:with-param name="root" select="."/>
 		</xsl:apply-templates>
-		<!-- /Invoice/cac:LegalMonetaryTotal/cbc:PrepaidAmount Si existe "Tipo de comprobante que se realizó el anticipo" igual a "02", la suma de "Monto anticipado" es diferente al valor del Tag UBL ERROR 2509 -->
+		<!-- /Invoice/cac:LegalMonetaryTotal/cbc:PrepaidAmount Si existe "Tipo de comprobante que se realiz� el anticipo" igual a "02", la suma de "Monto anticipado" es diferente al valor del Tag UBL ERROR 2509 -->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'2509'"/>
 			<xsl:with-param name="node" select="cac:PrepaidPayment/cbc:PaidAmount"/>
 			<!--             <xsl:with-param name="node" select="cac:PrepaidPayment[cbc:ID/@schemeID='02']/cbc:PaidAmount" /> -->
 			<xsl:with-param name="expresion" select="cac:LegalMonetaryTotal/cbc:PrepaidAmount &gt; 0 and (round(sum(cac:PrepaidPayment/cbc:PaidAmount)* 100) div 100)  != number(cac:LegalMonetaryTotal/cbc:PrepaidAmount)"/>
 		</xsl:call-template>
-		<!-- =========================================================================================================================================== Fin Información Adicional  - Anticipos =========================================================================================================================================== -->
-		<!-- =========================================================================================================================================== Información Adicional =========================================================================================================================================== -->
+		<!-- =========================================================================================================================================== Fin Informaci�n Adicional  - Anticipos =========================================================================================================================================== -->
+		<!-- =========================================================================================================================================== Informaci�n Adicional =========================================================================================================================================== -->
 		<xsl:apply-templates select="cbc:Note"/>
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'4264'"/>
@@ -459,33 +657,53 @@
 			</xsl:otherwise>
 		</xsl:choose>
 		<!--<xsl:if test="$tipoOperacion = '0110' or $tipoOperacion = '0111'"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'1076'" /><xsl:with-param name="node" select="cac:Delivery/cac:Shipment/cbc:ID" /><xsl:with-param name="expresion" select="not(cac:Delivery/cac:Shipment)" /></xsl:call-template></xsl:if><xsl:if test="$tipoOperacion = '0110' or $tipoOperacion = '0111'"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'1077'" /><xsl:with-param name="node" select="cac:Delivery/cac:Shipment/cbc:ID" /><xsl:with-param name="expresion" select="cac:Delivery/cac:Shipment" /></xsl:call-template></xsl:if>-->
-		<xsl:apply-templates select="cac:Delivery/cac:Shipment">
+		<!-- xsl:apply-templates select="cac:Delivery/cac:Shipment">
 			<xsl:with-param name="tipoOperacion" select="$tipoOperacion"/>
-		</xsl:apply-templates>
+		</xsl:apply-templates-->
 		<xsl:if test="$tipoOperacion = '0303'">
 			<xsl:call-template name="existElement">
 				<xsl:with-param name="errorCodeNotExist" select="'3180'"/>
 				<xsl:with-param name="node" select="cbc:DueDate"/>
 			</xsl:call-template>
 		</xsl:if>
-		<!-- =========================================================================================================================================== Fin Información Adicional =========================================================================================================================================== -->
+		<!-- =========================================================================================================================================== Fin Informaci�n Adicional =========================================================================================================================================== -->
 		<!-- =========================================================================================================================================== Detracciones =========================================================================================================================================== -->
+		<!-- Inicio MIGE-JRGS -->
+		<xsl:call-template name="isTrueExpresion">
+			<xsl:with-param name="errorCodeValidate" select="'3244'" />
+			<xsl:with-param name="node" select="cac:PaymentTerms/cbc:ID" />
+			<xsl:with-param name="expresion" select="count(cac:PaymentTerms/cbc:ID[text() = 'FormaPago']) &lt; 1" />
+			<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+		</xsl:call-template>
+		<xsl:if test="cac:PaymentTerms/cbc:ID/text() = 'FormaPago'">
+			<xsl:call-template name="isTrueExpresion">
+			  <xsl:with-param name="errorCodeValidate" select="'3247'" />
+			  <xsl:with-param name="node" select="cac:PaymentTerms/cbc:ID" />
+			  <xsl:with-param name="expresion" select="count(cac:PaymentTerms[cbc:ID[text() = 'FormaPago'] and cbc:PaymentMeansID[text() = 'Contado']]) &gt; 0 and 
+                                                 count(cac:PaymentTerms[cbc:ID[text() = 'FormaPago'] and cbc:PaymentMeansID[text() = 'Credito']]) &gt; 0" />
+			  <xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+			</xsl:call-template>
+		</xsl:if>
+		<!--Fin MIGE-->
 		<xsl:if test="$tipoOperacion ='1001' or $tipoOperacion ='1002' or $tipoOperacion ='1003' or $tipoOperacion ='1004'">
 			<xsl:call-template name="existElement">
 				<xsl:with-param name="errorCodeNotExist" select="'3127'"/>
 				<xsl:with-param name="node" select="cac:PaymentTerms/cbc:PaymentMeansID"/>
 			</xsl:call-template>
 		</xsl:if>
-		<xsl:if test="$tipoOperacion !='1001' and $tipoOperacion !='1002' and $tipoOperacion !='1003' and $tipoOperacion !='1004'">
+		<!--<xsl:if test="$tipoOperacion !='1001' and $tipoOperacion !='1002' and $tipoOperacion !='1003' and $tipoOperacion !='1004'">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'3128'"/>
 				<xsl:with-param name="node" select="cac:PaymentTerms/cbc:PaymentMeansID"/>
 				<xsl:with-param name="expresion" select="cac:PaymentTerms/cbc:PaymentMeansID"/>
 			</xsl:call-template>
-		</xsl:if>
+		</xsl:if>--> 
 		<xsl:apply-templates select="cac:PaymentTerms">
-			<xsl:with-param name="tipoOperacion" select="$tipoOperacion"/>
+			<xsl:with-param name="root" select="."/>
+            <xsl:with-param name="tipoOperacion" select="$tipoOperacion"/>
+            <xsl:with-param name="conError" select="$conError"/>
 		</xsl:apply-templates>
+		
 		<xsl:if test="$tipoOperacion = '0302'">
 			<xsl:call-template name="existElement">
 				<xsl:with-param name="errorCodeNotExist" select="'3173'"/>
@@ -522,6 +740,8 @@
 	<!-- =========================================================================================================================================== ============================================ Template cac:AccountingSupplierParty ========================================================= =========================================================================================================================================== -->
 	<xsl:template match="cac:AccountingSupplierParty">
 		<xsl:param name="tipoOperacion" select="'-'"/>
+		<!--Excel v6 PAS20211U210400011 JRGS - Se agrega parametro -->
+		<xsl:param name="root"/>
 		<!-- cac:AccountingSupplierParty/cbc:CustomerAssignedAccountID No existe el Tag UBL ERROR 1006 -->
 		<!--  El valor del Tag UBL es diferente al RUC del nombre del XML ERROR 1034 -->
 		<!--  El valor del Tag UBL no existe en el listado ERROR 2104 -->
@@ -534,7 +754,7 @@
 		</xsl:call-template>
 		<!-- cac:AccountingSupplierParty/cbc:AdditionalAccountID No existe el Tag UBL ERROR 1008 -->
 		<!--  El valor del Tag UBL es diferente a "6" ERROR 1007 -->
-		<!--  Existe más de un Tag UBL en el XML ERROR 2362 -->
+		<!--  Existe m�s de un Tag UBL en el XML ERROR 2362 -->
 		<!-- Tipo de documento -->
 		<xsl:call-template name="existAndRegexpValidateElement">
 			<xsl:with-param name="errorCodeNotExist" select="'1008'"/>
@@ -560,7 +780,7 @@
 			<xsl:with-param name="regexp" select="'^(urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06)$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 1500 caracteres ERROR 4092 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 1500 caracteres ERROR 4092 -->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'4092'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyName/cbc:Name"/>
@@ -575,9 +795,9 @@
 			<!-- que no inicie por espacio -->
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-		<!-- Apellidos y nombres, denominación o razón social -->
+		<!-- Apellidos y nombres, denominaci�n o raz�n social -->
 		<!-- cac:AccountingSupplierParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName No existe el Tag UBL ERROR 1037 -->
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 1500 caracteres ERROR 1038 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 1500 caracteres ERROR 1038 -->
 		<!-- <xsl:call-template name="existAndRegexpValidateElement"><xsl:with-param name="errorCodeNotExist" select="'1037'"/><xsl:with-param name="errorCodeValidate" select="'1038'"/><xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cbc:RegistrationName"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,1499}$'"/> </xsl:call-template> -->
 		<xsl:call-template name="existElement">
 			<xsl:with-param name="errorCodeNotExist" select="'1037'"/>
@@ -607,7 +827,7 @@
 				</xsl:call-template>
 			</xsl:when>
 			<xsl:otherwise>
-				<!--  El formato del Tag UBL es diferente a alfanumérico de 3 hasta 200 caracteres ERROR 4094 -->
+				<!--  El formato del Tag UBL es diferente a alfanum�rico de 3 hasta 200 caracteres ERROR 4094 -->
 				<xsl:call-template name="regexpValidateElementIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4094'"/>
 					<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cac:AddressLine/cbc:Line"/>
@@ -617,7 +837,7 @@
 				</xsl:call-template>
 			</xsl:otherwise>
 		</xsl:choose>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 25 caracteres ERROR 4095 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 25 caracteres ERROR 4095 -->
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4095'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:CitySubdivisionName"/>
@@ -632,7 +852,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat(' cbc:CitySubdivisionName ', cbc:CitySubdivisionName)"/>
 		</xsl:call-template>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 30 caracteres ERROR 4096 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 30 caracteres ERROR 4096 -->
 		<xsl:if test="not(string-length(cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:CityName) &gt; 30)">
 			<xsl:call-template name="regexpValidateElementIfExist">
 				<xsl:with-param name="errorCodeValidate" select="'4096'"/>
@@ -668,7 +888,7 @@
 			<xsl:with-param name="regexp" select="'^(Ubigeos)$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 30 caracteres ERROR 4097 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 30 caracteres ERROR 4097 -->
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4097'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:CountrySubentity"/>
@@ -683,7 +903,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat(' cbc:CountrySubentity ', cbc:CountrySubentity)"/>
 		</xsl:call-template>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 30 caracteres ERROR 4098 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 30 caracteres ERROR 4098 -->
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4098'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:District"/>
@@ -698,7 +918,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat(' cbc:District ', cbc:District)"/>
 		</xsl:call-template>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 30 caracteres ERROR 4041 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 30 caracteres ERROR 4041 -->
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4041'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cac:Country/cbc:IdentificationCode"/>
@@ -724,30 +944,51 @@
 			<xsl:with-param name="regexp" select="'^(Country)$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-		<xsl:call-template name="existElementNoVacio">
-			<xsl:with-param name="errorCodeNotExist" select="'3030'"/>
-			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
-			<!-- PAS115 Se cambio a observación a solicitud de MICHAEL RUIZ  -->
-			<xsl:with-param name="isError" select="false()"/>
-		</xsl:call-template>
+		<!-- Excel v6 PAS20211U210400011 - Se redefine validaci󮠤e establecimientos anexos-->
+		<xsl:choose>
+			<xsl:when test="substring($root/cbc:ID, 1, 1) = '0' or substring($root/cbc:ID, 1, 1) = '1' or substring($root/cbc:ID, 1, 1) = '2' or substring($root/cbc:ID, 1, 1) = '3' or substring($root/cbc:ID, 1, 1) = '4' or substring($root/cbc:ID, 1, 1) = '5' or substring($root/cbc:ID, 1, 1) = '6' or substring($root/cbc:ID, 1, 1) = '7' or substring($root/cbc:ID, 1, 1) = '8' or substring($root/cbc:ID, 1, 1) = '9'">
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'4198'"/>
+					<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
+					<xsl:with-param name="isError" select ="false()"/>
+				</xsl:call-template>
+				<xsl:if test="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode != ''">
+					<xsl:call-template name="regexpValidateElementIfExist">
+						<xsl:with-param name="errorCodeValidate" select="'4199'"/>
+						<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
+						<xsl:with-param name="regexp" select="'^[0-9]{1,}$'"/> <!-- de 4 dtos -->
+						<xsl:with-param name="isError" select ="false()"/>
+					</xsl:call-template>
+				</xsl:if>
+			</xsl:when>
+		<xsl:otherwise>
+			<xsl:call-template name="existElement">
+				<xsl:with-param name="errorCodeNotExist" select="'3030'"/>
+				<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
+				<!-- PAS115 Se cambio a observaci󮠡 solicitud de MICHAEL RUIZ  -->
+				<!-- Pasa a error -->
+				<!--xsl:with-param name="isError" select ="false()"/-->
+			</xsl:call-template>
+			<xsl:call-template name="regexpValidateElementIfExist">
+				<xsl:with-param name="errorCodeValidate" select="'3239'"/>
+				<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
+				<xsl:with-param name="regexp" select="'^[0-9]{1,}$'"/> <!-- de 4 dtos -->
+			</xsl:call-template>       
+		</xsl:otherwise>
+		</xsl:choose>		
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4242'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode"/>
 			<xsl:with-param name="regexp" select="'^[0-9]{4}$'"/>
-			<!-- de 4 dígitoso -->
+			<!-- de 4 d�gitoso -->
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-
-
-
-
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4251'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode/@listAgencyName"/>
 			<xsl:with-param name="regexp" select="'^(PE:SUNAT)$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4252'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyLegalEntity/cac:RegistrationAddress/cbc:AddressTypeCode/@listName"/>
@@ -814,7 +1055,7 @@
 		</xsl:choose>
 		<xsl:choose>
 			<xsl:when test="string-length(cbc:CitySubdivisionName) &gt; 25 or string-length(cbc:CitySubdivisionName) &lt; 1 ">
-				<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 25 caracteres ERROR 4238 -->
+				<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 25 caracteres ERROR 4238 -->
 				<xsl:call-template name="isTrueExpresionIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4238'"/>
 					<xsl:with-param name="node" select="cbc:CitySubdivisionName"/>
@@ -877,7 +1118,7 @@
 		</xsl:call-template>
 		<xsl:choose>
 			<xsl:when test="string-length(cbc:CountrySubentity) &gt; 30 or string-length(cbc:CountrySubentity) &lt; 1 ">
-				<!--  El formato del Tag UBL es diferente a alfanumérico de hasta 30 caracteres ERROR 4097 -->
+				<!--  El formato del Tag UBL es diferente a alfanum�rico de hasta 30 caracteres ERROR 4097 -->
 				<xsl:call-template name="isTrueExpresionIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4240'"/>
 					<xsl:with-param name="node" select="cbc:CountrySubentity"/>
@@ -975,10 +1216,10 @@
 			<xsl:with-param name="errorCodeNotExist" select="'2014'"/>
 			<xsl:with-param name="node" select="cac:Party/cac:PartyIdentification/cbc:ID"/>
 		</xsl:call-template>
-		<xsl:if test="true()">
+		<xsl:if test="cac:Party/cac:PartyIdentification/cbc:ID != '-'">
 			<xsl:choose>
 				<xsl:when test="cac:Party/cac:PartyIdentification/cbc:ID/@schemeID ='6'">
-					<!--  Si "Tipo de documento de identidad del adquiriente" es 6, el formato del Tag UBL es diferente a numérico de 11 dígitos	ERROR 2017 -->
+					<!--  Si "Tipo de documento de identidad del adquiriente" es 6, el formato del Tag UBL es diferente a num�rico de 11 d�gitos	ERROR 2017 -->
 					<xsl:call-template name="regexpValidateElementIfExist">
 						<xsl:with-param name="errorCodeValidate" select="'2017'"/>
 						<xsl:with-param name="node" select="cac:Party/cac:PartyIdentification/cbc:ID"/>
@@ -986,7 +1227,7 @@
 					</xsl:call-template>
 				</xsl:when>
 				<xsl:when test="cac:Party/cac:PartyIdentification/cbc:ID/@schemeID ='1'">
-					<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a numérico de 8 dígitos	OBSERV 4207 -->
+					<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a num�rico de 8 d�gitos	OBSERV 4207 -->
 					<xsl:call-template name="regexpValidateElementIfExist">
 						<xsl:with-param name="errorCodeValidate" select="'2801'"/>
 						<xsl:with-param name="node" select="cac:Party/cac:PartyIdentification/cbc:ID"/>
@@ -994,7 +1235,7 @@
 					</xsl:call-template>
 				</xsl:when>
 				<xsl:otherwise>
-					<!-- Si "Tipo de documento de identidad del adquiriente" es diferente de "1" y diferente "6", el formato del Tag UBL es diferente a alfanumérico de hasta 15 caracteres	OBSERV 4208 -->
+					<!-- Si "Tipo de documento de identidad del adquiriente" es diferente de "1" y diferente "6", el formato del Tag UBL es diferente a alfanum�rico de hasta 15 caracteres	OBSERV 4208 -->
 					<xsl:call-template name="regexpValidateElementIfExist">
 						<xsl:with-param name="errorCodeValidate" select="'2802'"/>
 						<xsl:with-param name="node" select="cac:Party/cac:PartyIdentification/cbc:ID"/>
@@ -1062,7 +1303,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
 		<!-- No existe el Tag UBL ERROR 2021 -->
-		<!-- El formato del Tag UBL es diferente a alfanumérico de 3 hasta 1000 caracteres ERROR 2022 -->
+		<!-- El formato del Tag UBL es diferente a alfanum�rico de 3 hasta 1000 caracteres ERROR 2022 -->
 		<xsl:call-template name="existAndRegexpValidateElement">
 			<xsl:with-param name="errorCodeNotExist" select="'2021'"/>
 			<xsl:with-param name="errorCodeValidate" select="'2022'"/>
@@ -1074,7 +1315,7 @@
 	<!-- =========================================================================================================================================== =========================================== fin Template cac:AccountingCustomerParty =========================================== =========================================================================================================================================== -->
 	<!-- =========================================================================================================================================== =========================================== Template cac:DespatchDocumentReference =========================================== =========================================================================================================================================== -->
 	<xsl:template match="cac:DespatchDocumentReference">
-		<!--  El "Tipo de la guía de remisión relacionada" concatenada con el valor del Tag UBL no debe repetirse en el /Invoice ERROR 2364 -->
+		<!--  El "Tipo de la gu�a de remisi�n relacionada" concatenada con el valor del Tag UBL no debe repetirse en el /Invoice ERROR 2364 -->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'2364'"/>
 			<xsl:with-param name="node" select="cbc:ID"/>
@@ -1085,11 +1326,12 @@
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4006'"/>
 			<xsl:with-param name="node" select="cbc:ID"/>
-			<xsl:with-param name="regexp" select="'^(([T][0-9]{3}-[0-9]{1,8})|([0-9]{4}-[0-9]{1,8})|([E][G][0-9]{2}-[0-9]{1,8})|([G][0-9]{3}-[0-9]{1,8}))$'"/>
+			<!--xsl:with-param name="regexp" select="'^(([T][0-9]{3}-[0-9]{1,8})|([0-9]{4}-[0-9]{1,8})|([E][G][0-9]{2}-[0-9]{1,8})|([G][0-9]{3}-[0-9]{1,8}))$'"/-->
+			<xsl:with-param name="regexp" select="'^(([TV][A-Z0-9]{3}-[0-9]{1,8})|([0-9]{4}-[0-9]{1,8})|([E][G][0][1-4,7]{1}-[0-9]{1,8})|([G][0-9]{3}-[0-9]{1,8}))$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Guia Relacionada : ', cbc:DocumentTypeCode,'-',cbc:ID)"/>
 		</xsl:call-template>
-		<!-- cac:DespatchDocumentReference/cbc:DocumentTypeCode Si existe el "Número de la guía de remisión relacionada", el formato del Tag UBL es diferente de "09" o "31" OBSERV 4005 -->
+		<!-- cac:DespatchDocumentReference/cbc:DocumentTypeCode Si existe el "N�mero de la gu�a de remisi�n relacionada", el formato del Tag UBL es diferente de "09" o "31" OBSERV 4005 -->
 		<xsl:call-template name="existAndRegexpValidateElement">
 			<xsl:with-param name="errorCodeNotExist" select="'4005'"/>
 			<xsl:with-param name="errorCodeValidate" select="'4005'"/>
@@ -1173,7 +1415,7 @@
 			</xsl:if>
 		</xsl:if>
 		<xsl:if test="cbc:DocumentTypeCode != '02' and cbc:DocumentTypeCode != '03'">
-			<!-- cac:AdditionalDocumentReference/cbc:ID Si el Tag UBL existe, el formato del Tag UBL es diferente a alfanumérico de hasta 100 caracteres OBSERV 4010 -->
+			<!-- cac:AdditionalDocumentReference/cbc:ID Si el Tag UBL existe, el formato del Tag UBL es diferente a alfanum�rico de hasta 100 caracteres OBSERV 4010 -->
 			<xsl:call-template name="existAndRegexpValidateElement">
 				<xsl:with-param name="errorCodeNotExist" select="'4010'"/>
 				<xsl:with-param name="errorCodeValidate" select="'4010'"/>
@@ -1182,7 +1424,7 @@
 				<xsl:with-param name="isError" select="false()"/>
 				<xsl:with-param name="descripcion" select="concat('Documento Relacionado : ', cbc:DocumentTypeCode,'-',cbc:ID)"/>
 			</xsl:call-template>
-			<!-- cac:AdditionalDocumentReference/cbc:DocumentTypeCode Si existe el "Número de otro documento relacionado", el formato del Tag UBL es diferente de "04" o "05" o "99" o "01" OBSERV 4009 -->
+			<!-- cac:AdditionalDocumentReference/cbc:DocumentTypeCode Si existe el "N�mero de otro documento relacionado", el formato del Tag UBL es diferente de "04" o "05" o "99" o "01" OBSERV 4009 -->
 			<xsl:call-template name="existAndRegexpValidateElement">
 				<xsl:with-param name="errorCodeNotExist" select="'4009'"/>
 				<xsl:with-param name="errorCodeValidate" select="'4009'"/>
@@ -1193,7 +1435,7 @@
 			</xsl:call-template>
 		</xsl:if>
 		<xsl:if test="cbc:DocumentStatusCode">
-			<!-- cac:AdditionalDocumentReference/cbc:DocumentTypeCode Si existe el "Número de otro documento relacionado", el formato del Tag UBL es diferente de "04" o "05" o "99" o "01"	OBSERV 2505 -->
+			<!-- cac:AdditionalDocumentReference/cbc:DocumentTypeCode Si existe el "N�mero de otro documento relacionado", el formato del Tag UBL es diferente de "04" o "05" o "99" o "01"	OBSERV 2505 -->
 			<xsl:call-template name="existAndRegexpValidateElement">
 				<!--<xsl:with-param name="errorCodeNotExist" select="'2505'"/>-->
 				<xsl:with-param name="errorCodeValidate" select="'2505'"/>
@@ -1273,13 +1515,14 @@
 		<xsl:variable name="tipoOperacion" select="$root/cbc:InvoiceTypeCode/@listID"/>
 		<xsl:variable name="codigoProducto" select="$root/cac:PaymentTerms/cbc:PaymentMeansID/text()"/>
 		<xsl:variable name="codigoPrecio" select="cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceTypeCode"/>
-		<!-- cac:InvoiceLine/cbc:ID El formato del Tag UBL es diferente de numérico de 3 dígitos ERROR 2023 -->
+		<!-- cac:InvoiceLine/cbc:ID El formato del Tag UBL es diferente de num�rico de 3 d�gitos ERROR 2023 -->
 		<!-- Numero de item -->
+		<!-- Excel v6 PAS20211U210400011 - Se pasa de 5 a 3-->
 		<xsl:call-template name="existAndRegexpValidateElement">
 			<xsl:with-param name="errorCodeNotExist" select="'2023'"/>
 			<xsl:with-param name="errorCodeValidate" select="'2023'"/>
 			<xsl:with-param name="node" select="cbc:ID"/>
-			<xsl:with-param name="regexp" select="'^(?!0*$)\d{1,5}$'"/>
+			<xsl:with-param name="regexp" select="'^(?!0*$)\d{1,3}$'"/>
 			<!-- de tres numeros como maximo, no cero -->
 			<xsl:with-param name="descripcion" select="concat('Error en la linea:', position(), '. ')"/>
 		</xsl:call-template>
@@ -1344,7 +1587,7 @@
 		<!--                 <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/> -->
 		<!--             </xsl:call-template> -->
 		<!--         </xsl:if> -->
-		<!-- PAS20191U210000026 cambio de error 3002 a observación 4332-->
+		<!-- PAS20191U210000026 cambio de error 3002 a observaci�n 4332-->
 		<xsl:call-template name="findElementInCatalog">
 			<!-- <xsl:with-param name="errorCodeValidate" select="'3002'"/> -->
 			<xsl:with-param name="errorCodeValidate" select="'4332'"/>
@@ -1353,7 +1596,7 @@
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 			<xsl:with-param name="isError" select="false()"/>
 		</xsl:call-template>
-		<!-- PAS20191U210000026 Agrega validación 4337 	-->
+		<!-- PAS20191U210000026 Agrega validaci�n 4337 	-->
 		<xsl:if test="cac:Item/cac:CommodityClassification/cbc:ItemClassificationCode and string-length(cac:Item/cac:CommodityClassification/cbc:ItemClassificationCode) = 8">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'4337'"/>
@@ -1392,7 +1635,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
-		<!-- PAS20191U210000026 cambio de error 3201 a observación 4334-->
+		<!-- PAS20191U210000026 cambio de error 3201 a observaci�n 4334-->
 		<!-- PAS20191U210000026 se agrego GTIN-12 -->
 		<xsl:choose>
 			<xsl:when test="cac:Item/cac:StandardItemIdentification/cbc:ID/@schemeID = 'GTIN-8'">
@@ -1439,7 +1682,7 @@
 				</xsl:call-template>
 			</xsl:when>
 		</xsl:choose>
-		<!-- PAS20191U210000026 cambio de error 3200 a observación 4335-->
+		<!-- PAS20191U210000026 cambio de error 3200 a observaci�n 4335-->
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<!-- <xsl:with-param name="errorCodeValidate" select="'3200'"/> -->
 			<xsl:with-param name="errorCodeValidate" select="'4335'"/>
@@ -1448,7 +1691,7 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
-		<!-- PAS20191U210000026 cambio de error 3199 a observación 4333-->
+		<!-- PAS20191U210000026 cambio de error 3199 a observaci�n 4333-->
 		<xsl:if test="cac:Item/cac:StandardItemIdentification/cbc:ID">
 			<xsl:call-template name="existElementNoVacio">
 				<!-- <xsl:with-param name="errorCodeNotExist" select="'3199'"/> -->
@@ -1459,7 +1702,7 @@
 			</xsl:call-template>
 		</xsl:if>
 		<!-- cac:InvoiceLine/cac:Item/cbc:Description No existe el Tag UBL ERROR 2026 -->
-		<!-- Descripción detallada del servicio prestado, bien vendido o cedido en uso, indicando las características. -->
+		<!-- Descripci�n detallada del servicio prestado, bien vendido o cedido en uso, indicando las caracter�sticas. -->
 		<xsl:call-template name="existElement">
 			<xsl:with-param name="errorCodeNotExist" select="'2026'"/>
 			<xsl:with-param name="node" select="cac:Item/cbc:Description"/>
@@ -1636,7 +1879,7 @@
 		<!--        <xsl:call-template name="existAndRegexpValidateElement"><xsl:with-param name="errorCodeNotExist" select="'2026'"/><xsl:with-param name="errorCodeValidate" select="'2027'"/><xsl:with-param name="node" select="cac:Item/cbc:Description"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{0,499}$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/></xsl:call-template>-->
 		<!-- cac:InvoiceLine/cac:Price/cbc:PriceAmount No existe el Tag UBL ERROR 2068 -->
 		<!--  El formato del Tag UBL es diferente de decimal de 12 enteros y hasta 10 decimales ERROR 2369 -->
-		<!-- Valor unitario por ítem -->
+		<!-- Valor unitario por �tem -->
 		<xsl:call-template name="existAndValidateValueTenDecimal">
 			<xsl:with-param name="errorCodeNotExist" select="'2068'"/>
 			<xsl:with-param name="errorCodeValidate" select="'2369'"/>
@@ -1651,14 +1894,14 @@
 			<xsl:with-param name="descripcion" select="concat('Error en la linea:', $nroLinea, '. ')"/>
 		</xsl:call-template>
 		<!-- cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceTypeCode El valor del Tag UBL es diferente al listado ERROR 2028 -->
-		<!-- Código de precio unitario -->
+		<!-- C�digo de precio unitario -->
 		<xsl:call-template name="existElement">
 			<xsl:with-param name="errorCodeNotExist" select="'2028'"/>
 			<xsl:with-param name="node" select="cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
 		<xsl:for-each select="cac:PricingReference/cac:AlternativeConditionPrice">
-			<!-- cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount No existe el Tag UBL o es vacío ERROR 2028 -->
+			<!-- cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount No existe el Tag UBL o es vac�o ERROR 2028 -->
 			<!-- El formato del Tag UBL es diferente de decimal de 12 enteros y hasta 10 decimales ERROR 2367 -->
 			<xsl:call-template name="existAndValidateValueTenDecimal">
 				<!--<xsl:with-param name="errorCodeNotExist" select="'2028'"/>-->
@@ -1712,8 +1955,8 @@
 			<xsl:with-param name="expresion" select="count(cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceTypeCode) &gt; 1"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea:', position(), '. ')"/>
 		</xsl:call-template>
-		<!-- cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount Si	"Afectación al IGV por línea" es 10 (Gravado), 20 (Exonerado) o 30 (Inafecto) y "cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceTypeCode" es 02 (Valor referencial en operaciones no onerosa),	el Tag UBL es mayor a 0 (cero)	ERROR 2425 -->
-		<!-- Valor referencial unitario por ítem en operaciones no onerosas -->
+		<!-- cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount Si	"Afectaci�n al IGV por l�nea" es 10 (Gravado), 20 (Exonerado) o 30 (Inafecto) y "cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceTypeCode" es 02 (Valor referencial en operaciones no onerosa),	el Tag UBL es mayor a 0 (cero)	ERROR 2425 -->
+		<!-- Valor referencial unitario por �tem en operaciones no onerosas -->
 		<!--<xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2425'" /><xsl:with-param name="node" select="cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReasonCode" /><xsl:with-param name="expresion" select="$codigoPrecio='02' and cac:PricingReference/cac:AlternativeConditionPrice[cbc:PriceTypeCode ='02']/cbc:PriceAmount > 0 and cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReasonCode[text() = '10' or text() = '20' or text() = '30']" /><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/></xsl:call-template>-->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'3224'"/>
@@ -1748,7 +1991,7 @@
 			<xsl:with-param name="root" select="$root"/>
 			<xsl:with-param name="valorVenta" select="cbc:LineExtensionAmount"/>
 		</xsl:apply-templates>
-		<!-- Valor de venta por línea -->
+		<!-- Valor de venta por l�nea -->
 		<!-- cac:InvoiceLine/cbc:LineExtensionAmount El formato del Tag UBL es diferente de decimal (positivo o negativo) de 12 enteros y hasta 2 decimales ERROR 2370 -->
 		<xsl:call-template name="existAndValidateValueTwoDecimal">
 			<xsl:with-param name="errorCodeNotExist" select="'2370'"/>
@@ -1757,7 +2000,7 @@
 			<xsl:with-param name="isGreaterCero" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
-		<!-- cbc:LineExtensionAmount Si "Tipo de operación" es 0102 (Venta interna - Anticipo), el Tag UBL es menor igual a 0 (cero) ERROR   2501<xsl:if test="$tipoOperacion='0102'"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2501'" /><xsl:with-param name="node" select="cbc:LineExtensionAmount" /><xsl:with-param name="expresion" select="cbc:LineExtensionAmount &lt;= 0" /><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/></xsl:call-template></xsl:if>-->
+		<!-- cbc:LineExtensionAmount Si "Tipo de operaci�n" es 0102 (Venta interna - Anticipo), el Tag UBL es menor igual a 0 (cero) ERROR   2501<xsl:if test="$tipoOperacion='0102'"><xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'2501'" /><xsl:with-param name="node" select="cbc:LineExtensionAmount" /><xsl:with-param name="expresion" select="cbc:LineExtensionAmount &lt;= 0" /><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/></xsl:call-template></xsl:if>-->
 		<!-- Cargos y tributos por linea de detalle -->
 		<xsl:apply-templates select="cac:AllowanceCharge" mode="linea">
 			<xsl:with-param name="nroLinea" select="$nroLinea"/>
@@ -2113,6 +2356,37 @@
 				<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Concepto: 7007')"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!--Excel v6 PAS20211U210400011 JRGS-->
+        <!-- Validaciones de empresas de seguros -->
+        <xsl:if test="$tipoOperacion = '2104'">
+			<xsl:if test="cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7015']">
+				<xsl:variable name="tipoSeguro" select="cac:Item/cac:AdditionalItemProperty[cbc:NameCode[text() = '7015']]/cbc:Value"/>
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2898'"/>
+					<xsl:with-param name="node" select="cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7013']" />
+					<xsl:with-param name="expresion" select="not(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7013']) and ($tipoSeguro = '1' or $tipoSeguro = '2')" />
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Concepto: 7013')"/>
+				</xsl:call-template>
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2898'"/>
+					<xsl:with-param name="node" select="cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7014']" />
+					<xsl:with-param name="expresion" select="not(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7014']) and ($tipoSeguro = '1' or $tipoSeguro = '2')" />
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Concepto: 7014')"/>
+				</xsl:call-template> 
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2898'"/>
+					<xsl:with-param name="node" select="cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7016']" />
+					<xsl:with-param name="expresion" select="not(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7016']) and ($tipoSeguro = '1' or $tipoSeguro = '2')" />
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Concepto: 7016')"/>
+				</xsl:call-template> 
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'2899'"/>
+					<xsl:with-param name="node" select="cac:Item/cac:AdditionalItemProperty/cbc:NameCode" />
+					<xsl:with-param name="expresion" select="not(cac:Item/cac:AdditionalItemProperty/cbc:NameCode[text() = '7013']) and $tipoSeguro = '3'" />
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Concepto: 7013')"/>
+				</xsl:call-template>           
+			</xsl:if>
+		</xsl:if>
 		<xsl:apply-templates select="cac:Item/cac:AdditionalItemProperty" mode="linea">
 			<xsl:with-param name="nroLinea" select="$nroLinea"/>
 		</xsl:apply-templates>
@@ -2122,7 +2396,8 @@
 		<!-- La fecha/hora de recepcion del comprobante por ose, no debe de ser mayor a la fecha de recepcion de sunat -->
 		<!-- <xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'4282'" /><xsl:with-param name="node" select="fechaIngreso" /><xsl:with-param name="expresion" select="$cacInvoicePeriodcbcStartDate &gt; $cacInvoicePeriodcbcEndDate" /><xsl:with-param name="descripcion" select="concat('La fecha de ingreso al establecimiento ', $fechaIngreso,' es mayor a la fecha de salida ', $fechaSalida,'&quot;')"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template> -->
 		<!-- Detracciones Servicios de transporte de carga -->
-		<xsl:if test="$codigoProducto = '027'">
+		<xsl:if test="$tipoOperacion = '1004'">
+		        <!--xsl:if test="$codigoProducto = '027'"-->
 			<xsl:call-template name="existElement">
 				<xsl:with-param name="errorCodeNotExist" select="'3116'"/>
 				<xsl:with-param name="node" select="cac:Delivery/cac:Despatch/cac:DespatchAddress/cbc:ID"/>
@@ -2278,7 +2553,7 @@
 		</xsl:call-template>
 		<xsl:choose>
 			<xsl:when test="string-length(cac:Despatch/cac:DespatchAddress/cac:AddressLine/cbc:Line) &gt; 200 or string-length(cac:Despatch/cac:DespatchAddress/cac:AddressLine/cbc:Line) &lt; 3 ">
-				<!-- Verifica el tamaño de la cadena enviada -->
+				<!-- Verifica el tama�o de la cadena enviada -->
 				<xsl:call-template name="isTrueExpresionIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4236'"/>
 					<xsl:with-param name="node" select="cac:Despatch/cac:DespatchAddress/cac:AddressLine/cbc:Line"/>
@@ -2338,7 +2613,7 @@
 				</xsl:call-template>
 			</xsl:otherwise>
 		</xsl:choose>
-		<!--  El formato del Tag UBL es diferente a alfanumérico de 3 hasta 200 caracteres ERROR 4236 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de 3 hasta 200 caracteres ERROR 4236 -->
 		<!--         <xsl:call-template name="regexpValidateElementIfExist"> -->
 		<!--             <xsl:with-param name="errorCodeValidate" select="'4236'"/> -->
 		<!--             <xsl:with-param name="node" select="cac:DeliveryLocation/cac:Address/cac:AddressLine/cbc:Line"/> -->
@@ -2346,7 +2621,7 @@
 		<!--             <xsl:with-param name="isError" select ="false()"/> -->
 		<!--             <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/> -->
 		<!--         </xsl:call-template> -->
-		<!--  El formato del Tag UBL es diferente a alfanumérico de 3 hasta 200 caracteres ERROR 4094 -->
+		<!--  El formato del Tag UBL es diferente a alfanum�rico de 3 hasta 200 caracteres ERROR 4094 -->
 		<!--         <xsl:call-template name="regexpValidateElementIfExist"> -->
 		<!--             <xsl:with-param name="errorCodeValidate" select="'4270'"/> -->
 		<!--             <xsl:with-param name="node" select="cac:Despatch/cbc:Instructions"/> -->
@@ -2414,7 +2689,7 @@
 		<xsl:call-template name="regexpValidateElementIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'4252'"/>
 			<xsl:with-param name="node" select="cac:Shipment/cac:Consignment/cac:TransportHandlingUnit/cac:TransportEquipment/cbc:SizeTypeCode/@listName"/>
-			<xsl:with-param name="regexp" select="'^(Configuracion Vehícular)$'"/>
+			<xsl:with-param name="regexp" select="'^(Configuracion Veh�cular)$'"/>
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
@@ -2784,7 +3059,7 @@
 		</xsl:if>
 		<!-- Validaciones exportacion -->
 		<xsl:if test="$tipoOperacion='0200' or $tipoOperacion='0201' or $tipoOperacion='0202' or $tipoOperacion='0203' or $tipoOperacion='0204' or $tipoOperacion='0205' or $tipoOperacion='0206' or $tipoOperacion='0207' or $tipoOperacion='0208'">
-			<!-- Si "Código de tributo por línea" es 1000 (IGV) y "Tipo de operación" es 02 (Exportación), el valor del Tag UBL es diferente a 40 (Exportación) ERROR 2642 -->
+			<!-- Si "C�digo de tributo por l�nea" es 1000 (IGV) y "Tipo de operaci�n" es 02 (Exportaci�n), el valor del Tag UBL es diferente a 40 (Exportaci�n) ERROR 2642 -->
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'2642'"/>
 				<xsl:with-param name="node" select="cac:TaxCategory/cbc:TaxExemptionReasonCode"/>
@@ -2927,7 +3202,7 @@
 			<xsl:with-param name="expresion" select="cac:TaxSubtotal[cac:TaxCategory/cbc:TaxExemptionReasonCode='17']/cbc:TaxableAmount &gt; 0 and $root/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cbc:TaxExemptionReasonCode!='17']/cbc:TaxableAmount &gt; 0"/>
 			<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea)"/>
 		</xsl:call-template>
-		<!-- Validaciones exportacion <xsl:if test="$tipoOperacion='0200' or $tipoOperacion='0201' or $tipoOperacion='0202' or $tipoOperacion='0203' or $tipoOperacion='0204' or $tipoOperacion='0205' or $tipoOperacion='0206' or $tipoOperacion='0207' or $tipoOperacion='0208'">Si "Tipo de operación" es Exportación, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportación) ERROR 3100 <xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'3100'" /><xsl:with-param name="node" select="cac:TaxCategory/cac:TaxScheme/cbc:ID" /><xsl:with-param name="expresion" select="cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '2000']]/cbc:TaxableAmount &gt; 0" /><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Tributo: ', $codigoTributo)"/></xsl:call-template> </xsl:if>-->
+		<!-- Validaciones exportacion <xsl:if test="$tipoOperacion='0200' or $tipoOperacion='0201' or $tipoOperacion='0202' or $tipoOperacion='0203' or $tipoOperacion='0204' or $tipoOperacion='0205' or $tipoOperacion='0206' or $tipoOperacion='0207' or $tipoOperacion='0208'">Si "Tipo de operaci�n" es Exportaci�n, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportaci�n) ERROR 3100 <xsl:call-template name="isTrueExpresion"><xsl:with-param name="errorCodeValidate" select="'3100'" /><xsl:with-param name="node" select="cac:TaxCategory/cac:TaxScheme/cbc:ID" /><xsl:with-param name="expresion" select="cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '2000']]/cbc:TaxableAmount &gt; 0" /><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' Tributo: ', $codigoTributo)"/></xsl:call-template> </xsl:if>-->
 		<!-- 		PAS20191U210000012 add 7152 -->
 		<xsl:variable name="totalImpuestosxLinea" select="cbc:TaxAmount"/>
 		<xsl:variable name="SumatoriaImpuestosxLinea" select="sum(cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000' or text() = '7152' or text() = '1016' or text() = '2000' or text() = '9999']]/cbc:TaxAmount)"/>
@@ -2970,7 +3245,7 @@
 				<xsl:with-param name="isError" select="false()"/>
 			</xsl:call-template>
 		</xsl:if>
-		<!-- Si "Tipo de operación" es Exportación, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportación) ERROR 3100 -->
+		<!-- Si "Tipo de operaci�n" es Exportaci�n, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportaci�n) ERROR 3100 -->
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'3105'"/>
 			<xsl:with-param name="node" select="cac:TaxCategory/cac:TaxScheme/cbc:ID"/>
@@ -3119,7 +3394,7 @@
 		</xsl:call-template>
 		<xsl:variable name="codigoConcepto" select="cbc:NameCode"/>
 		<xsl:choose>
-			<!-- INICIO Información Adicional  - Detracciones: Recursos Hidrobiológicos -->
+			<!-- INICIO Informaci�n Adicional  - Detracciones: Recursos Hidrobiol�gicos -->
 			<xsl:when test="$codigoConcepto = '3001'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3260,8 +3535,8 @@
 					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 				</xsl:call-template>
 			</xsl:when>
-			<!-- FIN Información Adicional  - Detracciones: Recursos Hidrobiológicos -->
-			<!-- INICIO Información Adicional  - Transporte terrestre de pasajeros -->
+			<!-- FIN Informaci�n Adicional  - Detracciones: Recursos Hidrobiol�gicos -->
+			<!-- INICIO Informaci�n Adicional  - Transporte terrestre de pasajeros -->
 			<xsl:when test="$codigoConcepto = '3050'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3388,8 +3663,8 @@
 					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 				</xsl:call-template>
 			</xsl:when>
-			<!-- FIN Información Adicional  - Transporte terrestre de pasajeros -->
-			<!-- INICIO Información Adicional  - Beneficio de hospedaje -->
+			<!-- FIN Informaci�n Adicional  - Transporte terrestre de pasajeros -->
+			<!-- INICIO Informaci�n Adicional  - Beneficio de hospedaje -->
 			<xsl:when test="$codigoConcepto = '4000'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3539,8 +3814,8 @@
 				</xsl:choose>
 				<!-- <xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,19}$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template>-->
 			</xsl:when>
-			<!-- FIN Información Adicional  - Beneficio de hospedaje -->
-			<!-- INICIO - Migración de documentos autorizados - Carta Porte Aéreo -->
+			<!-- FIN Informaci�n Adicional  - Beneficio de hospedaje -->
+			<!-- INICIO - Migraci�n de documentos autorizados - Carta Porte A�reo -->
 			<xsl:when test="$codigoConcepto = '4030'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3625,8 +3900,8 @@
 				</xsl:choose>
 				<!-- <xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,199}$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template>-->
 			</xsl:when>
-			<!-- FIN - Migración de documentos autorizados - Carta Porte Aéreo -->
-			<!-- INICIO Migración de documentos autorizados - BVME para transporte ferroviario de pasajeros -->
+			<!-- FIN - Migraci�n de documentos autorizados - Carta Porte A�reo -->
+			<!-- INICIO Migraci�n de documentos autorizados - BVME para transporte ferroviario de pasajeros -->
 			<xsl:when test="$codigoConcepto = '4040'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3823,8 +4098,8 @@
 				</xsl:choose>
 				<!-- <xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{0,19}$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template>-->
 			</xsl:when>
-			<!-- FIN Migración de documentos autorizados - BVME para transporte ferroviario de pasajeros -->
-			<!-- INICIO Migración de documentos autorizados - Pago de regalía petrolera -->
+			<!-- FIN Migraci�n de documentos autorizados - BVME para transporte ferroviario de pasajeros -->
+			<!-- INICIO Migraci�n de documentos autorizados - Pago de regal�a petrolera -->
 			<xsl:when test="$codigoConcepto = '4060'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -3895,8 +4170,8 @@
 					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 				</xsl:call-template>
 			</xsl:when>
-			<!-- FIN Migración de documentos autorizados - Pago de regalía petrolera -->
-			<!-- INICIO - Ventas Sector Público -->
+			<!-- FIN Migraci�n de documentos autorizados - Pago de regal�a petrolera -->
+			<!-- INICIO - Ventas Sector P�blico -->
 			<xsl:when test="$codigoConcepto = '5000'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -4009,7 +4284,7 @@
 				</xsl:choose>
 				<!-- <xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{0,29}$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template>-->
 			</xsl:when>
-			<!-- FIN - Ventas Sector Público -->
+			<!-- FIN - Ventas Sector P�blico -->
 			<xsl:when test="$codigoConcepto = '7000'">
 				<xsl:call-template name="existElement">
 					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
@@ -4065,7 +4340,9 @@
 						<xsl:call-template name="regexpValidateElementIfExist">
 							<xsl:with-param name="errorCodeValidate" select="'4280'"/>
 							<xsl:with-param name="node" select="cbc:Value"/>
-							<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/>
+							<!--Excel v6 PAS20211U210400011 - Se agrega modifica expresion -->
+							<!--<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/> -->
+							<xsl:with-param name="regexp" select="'^[^\n\t\r\f]{2,}$'"/>
 							<xsl:with-param name="isError" select="false()"/>
 							<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 						</xsl:call-template>
@@ -4093,7 +4370,9 @@
 						<xsl:call-template name="regexpValidateElementIfExist">
 							<xsl:with-param name="errorCodeValidate" select="'4280'"/>
 							<xsl:with-param name="node" select="cbc:Value"/>
-							<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/>
+							<!--Excel v6 PAS20211U210400011 - Se agrega modifica expresion -->
+							<!--<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/> -->
+							<xsl:with-param name="regexp" select="'^[^\n\t\r\f]{2,}$'"/>
 							<xsl:with-param name="isError" select="false()"/>
 							<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 						</xsl:call-template>
@@ -4150,7 +4429,9 @@
 						<xsl:call-template name="regexpValidateElementIfExist">
 							<xsl:with-param name="errorCodeValidate" select="'4280'"/>
 							<xsl:with-param name="node" select="cbc:Value"/>
-							<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/>
+							<!--Excel v6 PAS20211U210400011 - Se agrega modifica expresion -->
+							<!--<xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,}$'"/> -->
+							<xsl:with-param name="regexp" select="'^[^\n\t\r\f]{2,}$'"/>
 							<xsl:with-param name="isError" select="false()"/>
 							<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
 						</xsl:call-template>
@@ -4159,6 +4440,97 @@
 				<!-- <xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^(?!\s*$)[^\s].{2,199}$'"/><xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template>-->
 			</xsl:when>
 			<!-- <xsl:when test="$codigoConcepto = '7008'"><xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^((?!\s*$){3,30})$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template></xsl:when><xsl:when test="$codigoConcepto = '7009'"><xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^((?!\s*$){2,29})$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template></xsl:when><xsl:when test="$codigoConcepto = '7010'"><xsl:call-template name="regexpValidateElementIfExist"><xsl:with-param name="errorCodeValidate" select="'4280'"/><xsl:with-param name="node" select="cbc:Value"/><xsl:with-param name="regexp" select="'^((?!\s*$){2,29})$'"/> <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/><xsl:with-param name="isError" select ="false()"/></xsl:call-template></xsl:when>-->
+			<!-- Excel v6 PAS20211U210400011 -->
+			<xsl:when test="$codigoConcepto = '7008' or $codigoConcepto = '7009' or $codigoConcepto = '7010' or $codigoConcepto = '7011'">
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
+		            <xsl:with-param name="node" select="cbc:Value"/>
+		            <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+			</xsl:when>
+            <!-- Excel v6 PAS20211U210400011 - Validaciones empresas de seguros -->
+			<xsl:when test="$codigoConcepto = '7013'">
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
+		            <xsl:with-param name="node" select="cbc:Value"/>
+		            <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+		        <xsl:choose>
+					<xsl:when test="string-length(cbc:Value) &gt; 50 or string-length(cbc:Value) &lt; 1 ">
+						<xsl:call-template name="isTrueExpresion">
+							<xsl:with-param name="errorCodeValidate" select="'4280'" />
+							<xsl:with-param name="node" select="cbc:Value" />
+							<xsl:with-param name="expresion" select="true()" />
+							<xsl:with-param name="isError" select ="false()"/>
+							<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				        </xsl:call-template>
+					</xsl:when>
+				<xsl:otherwise>
+					<xsl:call-template name="regexpValidateElementIfExist">
+						<xsl:with-param name="errorCodeValidate" select="'4280'"/>
+				        <xsl:with-param name="node" select="cbc:Value"/>
+				        <xsl:with-param name="regexp" select="'^[^\t\n\r\f]{1,}$'"/> 
+				        <xsl:with-param name="isError" select ="false()"/>
+				        <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+					</xsl:call-template>
+				</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+            <xsl:when test="$codigoConcepto = '7015'">
+            	<xsl:call-template name="existElement">
+		            <xsl:with-param name="errorCodeNotExist" select="'3064'"/>
+		            <xsl:with-param name="node" select="cbc:Value"/>
+		            <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'4280'"/>
+					<xsl:with-param name="node" select="cbc:Value"/>
+					<xsl:with-param name="regexp" select="'^[123]{1}$'"/> 
+					<xsl:with-param name="isError" select ="false()"/>
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+			</xsl:when>
+            <xsl:when test="$codigoConcepto = '7012' or $codigoConcepto = '7016'">
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3064'"/>
+		            <xsl:with-param name="node" select="cbc:Value"/>
+		            <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'4280'"/>
+				    <xsl:with-param name="node" select="cbc:Value"/>
+					<xsl:with-param name="regexp" select="'^(?=.*[1-9])[0-9]{1,15}(\.[0-9]{1,2})?$'"/> 
+				    <xsl:with-param name="isError" select ="false()"/>
+				    <xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+			</xsl:when>           
+			<xsl:when test="$codigoConcepto = '7014'">
+				<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'3243'"/>
+					<xsl:with-param name="node" select="cac:UsabilityPeriod/cbc:StartDate"/>
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'4280'" />
+					<xsl:with-param name="node" select="cac:UsabilityPeriod/cbc:StartDate" />
+					<xsl:with-param name="regexp" select="'^[0-9]{4}-[0-9]{2}-[0-9]{2}?$'" />
+					<xsl:with-param name="isError" select ="false()"/>
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+            	<xsl:call-template name="existElement">
+					<xsl:with-param name="errorCodeNotExist" select="'4366'"/>
+					<xsl:with-param name="node" select="cac:UsabilityPeriod/cbc:EndDate"/>
+					<xsl:with-param name="isError" select ="false()"/>
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'4280'" />
+					<xsl:with-param name="node" select="cac:UsabilityPeriod/cbc:EndDate" />
+					<xsl:with-param name="regexp" select="'^[0-9]{4}-[0-9]{2}-[0-9]{2}?$'" />
+					<xsl:with-param name="isError" select ="false()"/>
+					<xsl:with-param name="descripcion" select="concat('Error en la linea: ', $nroLinea, ' ConceptoItem ', cbc:NameCode)"/>
+				</xsl:call-template>
+			</xsl:when>
 		</xsl:choose>
 	</xsl:template>
 	<!-- =========================================================================================================================================== =========================================== fin Template cac:Item/cac:AdditionalItemProperty =========================================== =========================================================================================================================================== -->
@@ -4325,7 +4697,7 @@
 		<xsl:apply-templates select="cac:TaxSubtotal" mode="cabecera"/>
 		<!-- Validaciones exportacion -->
 		<xsl:if test="$tipoOperacion='0200' or $tipoOperacion='0201' or $tipoOperacion='0202' or $tipoOperacion='0203' or $tipoOperacion='0204' or $tipoOperacion='0205' or $tipoOperacion='0206' or $tipoOperacion='0207' or $tipoOperacion='0208'">
-			<!-- Si "Tipo de operación" es Exportación, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportación) ERROR 3107 -->
+			<!-- Si "Tipo de operaci�n" es Exportaci�n, el valor del Tag UBL es igual a 1000, 1016, 9997, 9998, 9999, 2000 (Exportaci�n) ERROR 3107 -->
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'3107'"/>
 				<xsl:with-param name="node" select="cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme[cbc:ID[text() = '1000' or text() = '1016' or text() = '9997' or text() = '9998' or text() = '9999' or text() = '2000']]/cbc:ID"/>
@@ -4373,8 +4745,8 @@
 		</xsl:call-template>
 		<xsl:variable name="totalBaseInafectas" select="cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9998']]/cbc:TaxableAmount"/>
 		<xsl:variable name="totalBaseInafectasxLinea" select="sum($root/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9998']]/cbc:TaxableAmount)"/>
-		<xsl:variable name="totalDescuentosGlobalesIna" select="sum($root/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode [text() = '06']]/cbc:Amount)"/>
-		<xsl:variable name="totalCalculado" select="$totalBaseInafectasxLinea - $totalDescuentosGlobalesIna"/>
+		<xsl:variable name="totalDescuentosGlobales" select="sum($root/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode [text() = '06']]/cbc:Amount)"/>
+		<xsl:variable name="totalCalculado" select="$totalBaseInafectasxLinea - $totalDescuentosGlobales"/>
 		<xsl:call-template name="isTrueExpresion">
 			<xsl:with-param name="errorCodeValidate" select="'4296'"/>
 			<xsl:with-param name="node" select="cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '9998']]/cbc:TaxableAmount"/>
@@ -4409,10 +4781,10 @@
 		<xsl:variable name="totalBaseIVAP" select="sum(cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1016']]/cbc:TaxableAmount)"/>
 		<xsl:variable name="totalBaseIGVxLinea" select="sum($root/cac:InvoiceLine[cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxableAmount &gt; 0]/cbc:LineExtensionAmount)"/>
 		<xsl:variable name="totalBaseIVAPxLinea" select="sum($root/cac:InvoiceLine[cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1016']]/cbc:TaxableAmount &gt; 0]/cbc:LineExtensionAmount)"/>
-		<xsl:variable name="totalDescuentosGlobales" select="sum($root/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode [text() = '02' or text() = '04']]/cbc:Amount)"/>
+		<xsl:variable name="totalDescuentosGlobales1" select="sum($root/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode [text() = '02' or text() = '04']]/cbc:Amount)"/>
 		<xsl:variable name="totalCargosGobales" select="sum($root/cac:AllowanceCharge[cbc:AllowanceChargeReasonCode [text() = '49']]/cbc:Amount)"/>
-		<xsl:variable name="totalBaseIGVCalculado" select="$totalBaseIGVxLinea - $totalDescuentosGlobales + $totalCargosGobales"/>
-		<xsl:variable name="totalBaseIVAPCalculado" select="$totalBaseIVAPxLinea - $totalDescuentosGlobales + $totalCargosGobales"/>
+		<xsl:variable name="totalBaseIGVCalculado" select="$totalBaseIGVxLinea - $totalDescuentosGlobales1 + $totalCargosGobales"/>
+		<xsl:variable name="totalBaseIVAPCalculado" select="$totalBaseIVAPxLinea - $totalDescuentosGlobales1 + $totalCargosGobales"/>
 		<xsl:if test="cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID[text() = '1000']]/cbc:TaxableAmount &gt; 0">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'4299'"/>
@@ -4472,8 +4844,9 @@
 	</xsl:template>
 	<!-- =========================================================================================================================================== =========================================== fin Template cac:TaxTotal =========================================== =========================================================================================================================================== -->
 	<!-- =========================================================================================================================================== =========================================== Template cac:AllowanceCharge =========================================== =========================================================================================================================================== -->
-	<xsl:template match="cac:AllowanceCharge" mode="cabecera">
+	<xsl:template match="cac:AllowanceCharge" mode="cabecera">		
 		<xsl:param name="root"/>
+		<xsl:param name="conError" select = "false()" />
 		<xsl:variable name="codigoCargoDescuento" select="cbc:AllowanceChargeReasonCode"/>
 		<xsl:variable name="monedaComprobante" select="$root/cbc:DocumentCurrencyCode"/>
 		<xsl:variable name="importeComprobante" select="$root/cac:LegalMonetaryTotal/cbc:PayableAmount"/>
@@ -4494,6 +4867,23 @@
 				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!-- MIGE-JRGS -->
+		<xsl:if test="$codigoCargoDescuento = '62'">
+			<xsl:call-template name="isTrueExpresion">
+				<xsl:with-param name="errorCodeValidate" select="'3114'" />
+				<xsl:with-param name="node" select="cbc:ChargeIndicator" />
+				<xsl:with-param name="expresion" select="cbc:ChargeIndicator/text() = 'true'" />
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+			</xsl:call-template>
+		    <xsl:call-template name="isTrueExpresion">
+				<xsl:with-param name="errorCodeValidate" select="'3262'" />
+				<xsl:with-param name="node" select="cac:AccountingCustomerParty/cac:Party/cac:PartyIdentification/cbc:ID/@schemeID" />
+				<xsl:with-param name="expresion" select="$root/cac:AccountingCustomerParty/cac:Party/cac:PartyIdentification/cbc:ID/@schemeID != '6'" />
+				<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+			</xsl:call-template>
+		</xsl:if>
+		<!-- Fin MIGE-->
 		<xsl:call-template name="existElement">
 			<xsl:with-param name="errorCodeNotExist" select="'3072'"/>
 			<xsl:with-param name="node" select="cbc:AllowanceChargeReasonCode"/>
@@ -4533,18 +4923,36 @@
 			<xsl:with-param name="isError" select="false()"/>
 			<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
 		</xsl:call-template>
-		<xsl:call-template name="regexpValidateElementIfExist">
-			<xsl:with-param name="errorCodeValidate" select="'3025'"/>
-			<xsl:with-param name="node" select="cbc:MultiplierFactorNumeric"/>
-			<xsl:with-param name="regexp" select="'^(?!(0)[0-9]+$)[0-9]{1,3}(\.[0-9]{1,5})?$'"/>
-			<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
-		</xsl:call-template>
-		<xsl:call-template name="validateValueTwoDecimalIfExist">
-			<xsl:with-param name="errorCodeValidate" select="'2968'"/>
-			<xsl:with-param name="node" select="cbc:Amount"/>
-			<xsl:with-param name="isGreaterCero" select="false()"/>
-			<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
-		</xsl:call-template>
+		<!--Excel v6 PAS20211U210400011 - Se adiciona Percepciones para que valide sin permitir ceros -->
+		<xsl:choose>
+			<xsl:when test="$codigoCargoDescuento = '62' or $codigoCargoDescuento = '51' or $codigoCargoDescuento = '52' or $codigoCargoDescuento = '53'">
+				<xsl:call-template name="regexpValidateElementIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3025'"/>
+					<xsl:with-param name="node" select="cbc:MultiplierFactorNumeric"/>
+					<xsl:with-param name="regexp" select="'^(?=.*[1-9])[0-9]{1,3}(\.[0-9]{1,5})?$'"/>
+					<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+				</xsl:call-template>
+				<xsl:call-template name="validateValueTwoDecimalIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'2968'"/>
+					<xsl:with-param name="node" select="cbc:Amount"/>
+					<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+				</xsl:call-template>
+			</xsl:when>
+		<xsl:otherwise>
+			<xsl:call-template name="regexpValidateElementIfExist">
+				<xsl:with-param name="errorCodeValidate" select="'3025'"/>
+				<xsl:with-param name="node" select="cbc:MultiplierFactorNumeric"/>
+				<xsl:with-param name="regexp" select="'^(?!(0)[0-9]+$)[0-9]{1,3}(\.[0-9]{1,5})?$'"/>
+				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+			</xsl:call-template>
+			<xsl:call-template name="validateValueTwoDecimalIfExist">
+				<xsl:with-param name="errorCodeValidate" select="'2968'"/>
+				<xsl:with-param name="node" select="cbc:Amount"/>
+				<xsl:with-param name="isGreaterCero" select="false()"/>
+				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+			</xsl:call-template>
+		</xsl:otherwise>
+		</xsl:choose>		
 		<xsl:variable name="MontoCalculadoPercepcion" select="cbc:BaseAmount * cbc:MultiplierFactorNumeric"/>
 		<xsl:variable name="MontoPercepcion" select="cbc:Amount"/>
 		<xsl:if test="$codigoCargoDescuento = '51' or $codigoCargoDescuento = '52' or $codigoCargoDescuento = '53'">
@@ -4555,7 +4963,8 @@
 				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
 			</xsl:call-template>
 		</xsl:if>
-		<xsl:if test="$codigoCargoDescuento != '45' and $codigoCargoDescuento != '51' and $codigoCargoDescuento != '52' and $codigoCargoDescuento != '53'">
+		<!-- MIGE-JRGS - Se agrega al if el codigo 62 -->
+		<xsl:if test="$codigoCargoDescuento != '45' and $codigoCargoDescuento != '51' and $codigoCargoDescuento != '52' and $codigoCargoDescuento != '53' and $codigoCargoDescuento != '62'">
 			<xsl:variable name="MontoCalculado" select="number(concat('0',cbc:BaseAmount)) * number(concat('0',cbc:MultiplierFactorNumeric))"/>
 			<xsl:variable name="Monto" select="cbc:Amount"/>
 			<xsl:call-template name="isTrueExpresion">
@@ -4567,6 +4976,19 @@
 				<xsl:with-param name="isError" select="false()"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!-- MIGE-JRGS -->
+		<xsl:if test="$codigoCargoDescuento = '62'">
+	        <xsl:variable name="MontoCalculado" select="number(concat('0',cbc:BaseAmount)) * number(concat('0',cbc:MultiplierFactorNumeric))"/>
+	       	<xsl:variable name="Monto" select="cbc:Amount"/>
+	        <xsl:call-template name="isTrueExpresion">
+	            <xsl:with-param name="errorCodeValidate" select="'3263'" />
+	            <xsl:with-param name="node" select="cbc:Amount" />
+	            <xsl:with-param name="expresion" select="cbc:MultiplierFactorNumeric &gt; 0 and (($MontoCalculado + 1 ) &lt; $Monto or ($MontoCalculado - 1) &gt; $Monto)" />
+	            <xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+	            <xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+	        </xsl:call-template>
+        </xsl:if>
+		<!-- Fin MIGE-->
 		<xsl:if test="$codigoCargoDescuento = '45'">
 			<xsl:call-template name="isTrueExpresion">
 				<xsl:with-param name="errorCodeValidate" select="'3074'"/>
@@ -4575,6 +4997,32 @@
 				<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
 			</xsl:call-template>
 		</xsl:if>
+		<!-- MIGE-JRGS -->
+		<xsl:choose>
+			<xsl:when test="$codigoCargoDescuento = '62'">
+				<xsl:call-template name="validateValueTwoDecimalIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3016'"/>
+					<xsl:with-param name="node" select="cbc:BaseAmount"/>
+					<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+				</xsl:call-template>
+				<xsl:call-template name="isTrueExpresion">
+					<xsl:with-param name="errorCodeValidate" select="'3264'" />
+					<xsl:with-param name="node" select="cbc:BaseAmount" />
+					<xsl:with-param name="expresion" select="cbc:BaseAmount &gt; $importeComprobante" />
+					<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+					<xsl:with-param name="isError" select ="boolean(number(0))"/> <!-- 0 false(observacion), 1 true(Error)-->
+				</xsl:call-template>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:call-template name="validateValueTwoDecimalIfExist">
+					<xsl:with-param name="errorCodeValidate" select="'3016'"/>
+					<xsl:with-param name="node" select="cbc:BaseAmount"/>
+					<xsl:with-param name="isGreaterCero" select="false()"/>
+					<xsl:with-param name="descripcion" select="concat('Error Cargo/Descuento ', $codigoCargoDescuento)"/>
+				</xsl:call-template>
+			</xsl:otherwise>
+		</xsl:choose>		
+		<!-- Fin MIGE-->
 		<xsl:call-template name="validateValueTwoDecimalIfExist">
 			<xsl:with-param name="errorCodeValidate" select="'3016'"/>
 			<xsl:with-param name="node" select="cbc:BaseAmount"/>
@@ -4875,7 +5323,7 @@
 		<xsl:variable name="tipoDocumentoConductores" select="cac:ShipmentStage/cac:DriverPerson/cbc:ID/@schemeID"/>
 		<xsl:choose>
 			<xsl:when test="$tipoDocumentoConductores ='0' or $tipoDocumentoConductores ='A'">
-				<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a numérico de 8 dígitos	OBSERV 4207 -->
+				<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a num�rico de 8 d�gitos	OBSERV 4207 -->
 				<xsl:call-template name="regexpValidateElementIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4174'"/>
 					<xsl:with-param name="node" select="cac:ShipmentStage/cac:DriverPerson/cbc:ID"/>
@@ -4884,7 +5332,7 @@
 				</xsl:call-template>
 			</xsl:when>
 			<xsl:when test="$tipoDocumentoConductores ='1'">
-				<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a numérico de 8 dígitos	OBSERV 4207 -->
+				<!--  Si "Tipo de documento de identidad del adquiriente" es "1", el formato del Tag UBL es diferente a num�rico de 8 d�gitos	OBSERV 4207 -->
 				<xsl:call-template name="regexpValidateElementIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4174'"/>
 					<xsl:with-param name="node" select="cac:ShipmentStage/cac:DriverPerson/cbc:ID"/>
@@ -4893,7 +5341,7 @@
 				</xsl:call-template>
 			</xsl:when>
 			<xsl:when test="$tipoDocumentoConductores ='4' or $tipoDocumentoConductores ='7'">
-				<!-- Si "Tipo de documento de identidad del adquiriente" es diferente de "4" y diferente "7", el formato del Tag UBL es diferente a alfanumérico de hasta 15 caracteres	OBSERV 4208 -->
+				<!-- Si "Tipo de documento de identidad del adquiriente" es diferente de "4" y diferente "7", el formato del Tag UBL es diferente a alfanum�rico de hasta 15 caracteres	OBSERV 4208 -->
 				<xsl:call-template name="regexpValidateElementIfExist">
 					<xsl:with-param name="errorCodeValidate" select="'4174'"/>
 					<xsl:with-param name="node" select="cac:ShipmentStage/cac:DriverPerson/cbc:ID"/>
