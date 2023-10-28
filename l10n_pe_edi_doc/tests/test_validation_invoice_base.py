@@ -46,22 +46,17 @@ class TestValidationInvoiceBase(TransactionCase):
     def setUp(self):
         super(TestValidationInvoiceBase,self).setUp()
 
-    def test_validation_1(self):
+    def test_validation_invoice(self):
         with open(get_module_resource('l10n_pe_edi_doc','tests/data','20608902211-01-FA11-00000249.xml'),'r') as f_xml:
             xml_file = ET.parse(f_xml)
 
         with open(get_module_resource('l10n_pe_edi_doc','tests/sunat_archivos/sfs/VALI/commons/xsl/validation/2.X','ValidaExprRegFactura-2.0.1.xsl'),'rb') as f_xsl:
-        #with open(get_module_resource('l10n_pe_edi_doc','tests/validations','Custom_ValidaExprRegFactura-2.0.1.xsl'),'rb') as f:
-        #with open(get_module_resource('l10n_pe_edi_doc','tests','ValidaExprRegFactura.xsl'),'rb') as f_xsl:
             xsl_file = ET.parse(f_xsl)
-
-
-        #/home/danielml/proyectos/22_odoo_16/addons_l10n_pe_bo/l10n_pe_edi_doc/tests/sunat_archivos/sfs/VALI/commons/xsl/validation/2.X/ValidaExprRegFactura-2.0.1.xsl
         
         try:
             transform = ET.XSLT(xsl_file)
             result = transform(xml_file,nombreArchivoEnviado=ET.XSLT.strparam('20608902211-01-FA11-00000249.xml'))
-            _logger.info(result)
+            #_logger.info(result)
         except Exception as e:
             _logger.info(f'log error {e}')
             #_logger.info(result)
