@@ -11,8 +11,6 @@ patron_dni = re.compile('\d{8}$')
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-
-
     def _search_partner_by_vat_peruapis(self):
         result = {}
         ICPSudo = self.env["ir.config_parameter"].sudo()

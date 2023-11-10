@@ -19,12 +19,12 @@
                             attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}" invisible="1"/>
                     <field name="city" invisible="1"/>
                     <field name="zip" invisible="1"/>
-                    <field name="state_id"  
+                    <field name="state_id"    
                             placeholder="Departamento" 
                             domain="[('country_id','=',country_id)]"
                             options='{"no_open": True, "no_create": True}'
                             attrs="{'readonly': [('type', '=', 'contact'),('parent_id', '!=', False)]}"/>
-                    <field name="city_id"  
+                    <field name="city_id"
                             placeholder="Provincia" 
                             domain="[('country_id','=',country_id),('state_id','=',state_id)]"
                             options='{"no_open": True, "no_create": True}'

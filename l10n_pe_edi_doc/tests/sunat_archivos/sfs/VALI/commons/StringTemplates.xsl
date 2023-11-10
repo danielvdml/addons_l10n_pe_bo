@@ -17,17 +17,17 @@
 		</xsl:if>
 	</xsl:template>
 	<xsl:template name="remove-leading-zeros">
-		<xsl:param name="text"/>
-		<xsl:choose>
-			<xsl:when test="starts-with($text,'0')">
-				<xsl:call-template name="remove-leading-zeros">
-					<xsl:with-param name="text"
-						select="substring-after($text,'0')"/>
-				</xsl:call-template>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="$text"/>
-			</xsl:otherwise>
-		</xsl:choose>
-	</xsl:template>
+    <xsl:param name="text"/>
+    <xsl:choose>
+        <xsl:when test="starts-with($text,'0')">
+            <xsl:call-template name="remove-leading-zeros">
+                <xsl:with-param name="text"
+                    select="substring-after($text,'0')"/>
+            </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:value-of select="$text"/>
+        </xsl:otherwise>
+    </xsl:choose>
+</xsl:template>
 </xsl:stylesheet>

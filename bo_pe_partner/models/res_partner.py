@@ -9,14 +9,12 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    #commercial_name = fields.Char(string='Nombre comercial')
-    #sunat_status = fields.Char(string="SUNAT - Estado")
-    #sunat_condition = fields.Char(string="SUNAT - Condición")
     ubigeo = fields.Char(string='Ubigeo')
 
     def _search_partner_by_vat(self,provider = ""):
         result = {}
         func_search_partner_by_vat = getattr(self,"_search_partner_by_vat_%s" % provider,None)
+        # func_search_partner_by_vat = _search_partner_by_vat_peruapis
         if func_search_partner_by_vat:
             result = func_search_partner_by_vat()
         return result
@@ -60,7 +58,6 @@ class ResPartner(models.Model):
     def change_vat(self):
         for record in self:
             record.update(record.search_partner_by_vat())
-
 
     def search_partner_by_vat(self):
         self.ensure_one()

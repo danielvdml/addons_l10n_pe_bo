@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:regexp="http://exslt.org/regular-expressions" 
-xmlns:dyn="http://exslt.org/dynamic" xmlns:gemfunc="http://www.sunat.gob.pe/gem/functions" 
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:regexp="http://exslt.org/regular-expressions"
+xmlns:dyn="http://exslt.org/dynamic" xmlns:gemfunc="http://www.sunat.gob.pe/gem/functions" xmlns:es="http://mydomain.org/myother/functions"
 xmlns:date="http://exslt.org/dates-and-times" xmlns:func="http://exslt.org/functions" 
 xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" exclude-result-prefixes="dp dyn regexp date func" version="1.0">
   <!-- xsl:include href="../../../commons/error/error_utils.xsl" dp:ignore-multiple="yes" /-->
@@ -9,8 +9,8 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
   <!-- xsl:include href="local:///commons/StringTemplates.xsl"
                dp:ignore-multiple="yes"/ -->
   <!-- Inicio: SFS -->
-  <xsl:include href="../../../VALI/commons/error/error_utils.xsl"/>
-  <xsl:include href="../../../VALI/commons/StringTemplates.xsl"/>
+  <xsl:include href="./error_utils.xsl"/>
+  <xsl:include href="../StringTemplates.xsl"/>
   <!-- Fin: SFS -->
   <!-- Template que sirve para validar que exista y que serie y nro sera valido segun su tipo -->
   <!-- Se debe de usar para elementos obligatorios -->
@@ -188,7 +188,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         <xsl:when test="$tipoComprobante = '06' or $tipoComprobante = '13' or $tipoComprobante = '16' or $tipoComprobante = '37' or $tipoComprobante = '43' or $tipoComprobante = '45' or $tipoComprobante = '24' or $tipoComprobante = '15'">
           <xsl:value-of select="'^[a-zA-Z0-9-]{1,20}?$'"/>
         </xsl:when>
-        <!-- 
+        <!--
                 <xsl:when test="$tipoComprobante = '12'">
                     <xsl:value-of select="'^[a-zA-Z0-9-]{1,20}?$'"></xsl:value-of>
                 </xsl:when>
@@ -328,7 +328,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
           </xsl:choose>
         </xsl:if> -->
 
-                <xsl:if test="not(regex:match($node, $regexp,'!'))">
+                <xsl:if test="not(es:matches($node, $regexp,'!'))">
                     <xsl:choose>
                         <xsl:when test="$isError">
                             <xsl:call-template name="rejectCall">
@@ -337,7 +337,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
                             </xsl:call-template>
                         </xsl:when>
                         <xsl:otherwise>
-                            
+
                             <xsl:call-template name="addWarning">
                                 <xsl:with-param name="warningCode" select="$errorCodeValidate" />
                                 <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
@@ -381,8 +381,8 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if> -->
-	
-                <xsl:if test="count($node) &gt;= 1 and not(regex:match($node, $regexp,'!'))">
+
+                <xsl:if test="count($node) &gt;= 1 and not(es:matches($node, $regexp,'!'))">
                     <xsl:choose>
                         <xsl:when test="$isError">
                             <xsl:call-template name="rejectCall">
@@ -391,7 +391,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
                             </xsl:call-template>
                         </xsl:when>
                         <xsl:otherwise>
-                            
+
                             <xsl:call-template name="addWarning">
                                 <xsl:with-param name="warningCode" select="$errorCodeValidate" />
                                 <xsl:with-param name="warningMessage" select="concat($descripcion,': errorCode ', $errorCodeValidate,' (nodo: &quot;',name($node/parent::*),'/', name($node), '&quot; valor: &quot;', $node, '&quot;)')" />
@@ -399,7 +399,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:if>
-	
+
   </xsl:template>
   <!-- Template que sirve para validar un nodo y si el nodo contiene un monto de 12 enteros 10 decimales y es mayor a cero -->
   <!-- Se debe de usar para elementos opcionales -->
@@ -629,9 +629,9 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
     <xsl:variable name="dynEval" select="concat('document(',$apos,$url_catalogo,$apos,')/l/c[', $vCondition, ']')"/>
     <!-- xsl:if test="count(document('local:///commons/cpe/catalogo/cat_22.xml')/l/c[@id=$idCatalogo and @tasa=$valorPropiedad]) &lt; 1 " -->
-	
+
 	<xsl:if test="count($idCatalogo) &gt;= 1 and count(document($url_catalogo)/l/c[@id=$idCatalogo and @gre-r=$valorPropiedad]) &lt; 1 ">
-	
+
     <!-- <xsl:if test="count(dyn:evaluate($dynEval)) &lt; 1 "> -->
       <xsl:choose>
         <xsl:when test="$isError">
@@ -649,7 +649,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
       </xsl:choose>
     </xsl:if>
   </xsl:template>
-  
+
   <xsl:template name="findElementInCatalog61rProperty">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="idCatalogo"/>
@@ -658,11 +658,11 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="valorPropiedad"/>
     <xsl:param name="descripcion" select="''"/>
     <xsl:param name="isError" select="true()"/>
-    
+
 	<!-- Inicio: SFS -->
     <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
 	<xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
+	<!-- Fin: SFS -->
 
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
@@ -683,8 +683,8 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
-  </xsl:template> 
-  
+  </xsl:template>
+
   <xsl:template name="findElementInCatalog61tProperty">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="idCatalogo"/>
@@ -693,11 +693,11 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="valorPropiedad"/>
     <xsl:param name="descripcion" select="''"/>
     <xsl:param name="isError" select="true()"/>
-    
+
 	<!-- Inicio: SFS -->
     <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
 	<xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
+	<!-- Fin: SFS -->
 
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
@@ -718,8 +718,8 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
-  </xsl:template>   
-  
+  </xsl:template>
+
   <xsl:template name="findElementInCatalogGREUbigeoProperty">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="idCatalogo"/>
@@ -728,11 +728,11 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="valorPropiedad"/>
     <xsl:param name="descripcion" select="''"/>
     <xsl:param name="isError" select="true()"/>
-    
-	  <!-- Inicio: SFS -->
+
+	<!-- Inicio: SFS -->
     <!-- <xsl:variable name="url_catalogo" select="concat('local:///commons/cpe/catalogo/cat_',$catalogo,'.xml')"/> -->
     <xsl:variable name="url_catalogo" select="concat('../../../VALI/commons/cpe/catalogo/cat_',$catalogo,'.xml')"/>
-	  <!-- Fin: SFS -->
+	<!-- Fin: SFS -->
 
     <xsl:variable name="apos">'</xsl:variable>
     <xsl:variable name="vCondition" select="concat('@id=', $apos,$idCatalogo, $apos,' and @', $propiedad, '=', $apos, $valorPropiedad, $apos)"/>
@@ -753,8 +753,8 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
-  </xsl:template> 
-  
+  </xsl:template>
+
   <!-- INI PAS20165E210300216 wsandovalh Template para obtener el valor de un atributo de un tag dentro de un catalogo -->
   <xsl:template name="getValueInCatalogProperty">
     <xsl:param name="idCatalogo"/>
@@ -790,7 +790,6 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
       </xsl:choose>
     </xsl:if>
   </xsl:template>
-  
   <!-- PAS20221U210700304-INI-EBV -->
     <xsl:template name="isTrueExpresionEmptyNode">
         <xsl:param name="errorCodeValidate" />
@@ -798,16 +797,16 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
         <xsl:param name="isError" select="true()"/>
         <xsl:param name="descripcion" select="'INFO '"/>
         <xsl:param name="line" select="'0'"/>
-        
+
         <xsl:if test="$expresion = true()">
             <xsl:choose>
-                <xsl:when test="$isError">    
+                <xsl:when test="$isError">
                     <xsl:call-template name="rejectCall">
                         <xsl:with-param name="errorCode" select="$errorCodeValidate" />
                         <xsl:with-param name="errorMessage" select="concat($descripcion,': ', $errorCodeValidate)" />
                     </xsl:call-template>
                 </xsl:when>
-                <xsl:otherwise>   
+                <xsl:otherwise>
                     <xsl:call-template name="addWarning">
                         <xsl:with-param name="warningCode" select="$errorCodeValidate" />
                         <xsl:with-param name="warningMessage" select="concat($descripcion,': ', $errorCodeValidate)" />
@@ -816,7 +815,7 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:if>
-        
+
     </xsl:template>
     <!-- PAS20221U210700304-FIN-EBV -->
   <xsl:template name="isTrueExpresionIfExist">
@@ -852,11 +851,11 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:variable name="resp">
       <dp:url-open target="{$urlService}" response="responsecode-binary" http-method="get" timeout="300"/>
     </xsl:variable>
-    <!-- 
+    <!--
         <xsl:message terminate="no" dp:category="cpe" dp:priority="warn">
-        
+
             <xsl:copy-of select="$resp"></xsl:copy-of>
-        
+
         </xsl:message>
          -->
     <xsl:if test="string($resp/result/responsecode) != '200'">
@@ -936,11 +935,11 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     </xsl:if>
   </xsl:template>
   <!-- verifca si un certificado le pertenece a un contribuyente:
-    datos de entrada ruc mas numero de serie del certificado 
+    datos de entrada ruc mas numero de serie del certificado
     fecha en que fue firmado el comprobante
-    retorna codigo de error y certificado validado 
-    
-    Solo es valido para servicios fuera del dominio FACTURA ELECTRONICA 
+    retorna codigo de error y certificado validado
+
+    Solo es valido para servicios fuera del dominio FACTURA ELECTRONICA
     -->
   <xsl:template name="validateCertContribuyente">
     <xsl:param name="rucBillCertSerialExaDecimal"/>
@@ -992,7 +991,6 @@ xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp" e
     <xsl:param name="data" select="''"/>
     <func:result select="regexp:match($data,'^[\s]*$')"/>
   </func:function>-->
-  
   <xsl:template name="findElementInCatalogPropertyxComponente">
     <xsl:param name="errorCodeValidate"/>
     <xsl:param name="idCatalogo"/>
