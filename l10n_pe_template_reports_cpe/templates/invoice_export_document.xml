@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="template_report_cpe_invoice_export" inherit_id="l10n_pe_template_reports_cpe.template_report_cpe_invoice">
+        <xpath expr="//div[hasclass('page')]/h2" position="before">
+            <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                <t t-set="document_display_name" t-value="'ELECTRONIC INVOICE'"/>
+            </t>
+        </xpath>
+
+        <xpath expr="//div[@name='invoice_address']/table[@id='table_factura_boleta']" position="replace">
+            <table id="table_factura_boleta" class="w-100" t-if="'{}_{}'.format(o.move_type, o.l10n_latam_document_type_id.code) in ['out_invoice_01','out_invoice_03','in_invoice_01','in_invoice_03']">
+                <tr>
+                    <!-- CLIENTE -->
+                    <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                        <th width="30%">
+                            <label t-esc="'CLIENTE/CUSTOMER: '"/>
+                        </th>
+                        <td class="label" width="30%">
+                            <span t-esc="(o.partner_id.name or '').upper()"/>
+                        </td>
+                        <!-- N° COT -->
+                        <th width="20%">
+                            <label t-esc="'N° COT/QUOTATION: '"/>
+                        </th>
+                        <td class="label" width="15%">
+                            <!-- <span t-esc="o.ref" t-if="o.ref"/> -->
+                            <span t-esc="o.invoice_origin" />
+                        </td>
+                    </t>
+                    <t t-else="">
+                        <th width="50%">
+                            <label t-esc="'CLIENTE: '"/>
+                        </th>
+                        <td class="label" width="50%">
+                            <span t-esc="(o.partner_id.name or '').upper()"/>
+                        </td>
+                        <!-- N° COT -->
+                        <th width="10%">
+                            <label t-esc="'N° COT: '"/>
+                        </th>
+                        <td class="label" width="30%">
+                            <!-- <span t-esc="o.ref" t-if="o.ref"/> -->
+                            <span t-esc="o.invoice_origin" />
+                        </td>
+                    </t>
+                </tr>
+                <tr>
+                    <!-- RUC/DNI -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label>DOC/ID TAX: </label>
+                        </t>
+                        <t t-else="">
+                            <label>DOC: </label>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="'{} - {}'.format(o.partner_id.l10n_latam_identification_type_id.name, (o.partner_id.vat or '').upper())"/>
+                    </td>
+                    <!-- VENDEDOR -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'VENDEDOR/SELLER: '" name="label_vendedor"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'VENDEDOR: '" name="label_vendedor"/>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="o.user_id.name or ''" name="value_vendedor"/>
+                    </td>
+                </tr>
+                <tr>
+                    <!-- DIRECCIÓN -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'DIRECCIÓN/ADDRESS: '"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'DIRECCIÓN: '"/>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="'{} {}-{}'.format(o.partner_id.street or '',o.partner_id.state_id.name or '',o.partner_id.l10n_pe_district.name or '').upper()"/>
+                    </td>
+                    <!-- MONEDA -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'MONEDA/CURRENCY: '"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'MONEDA: '"/>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="o.currency_id.currency_unit_label" t-if="o.currency_id.currency_unit_label"/>
+                    </td>
+                </tr>
+                <tr>
+                    <!-- FECHA EMISIÓN -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'F. EMISIÓN/ISSUE DATE:'"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'F. EMISIÓN:'"/>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="o.invoice_date" t-if="o.invoice_date"/>
+                    </td>
+                    <!-- FECHA DE VENCIMIENTO -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'F. VENC./EXPIRY DATE:'"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'F. VENC.:'"/>
+                        </t>
+                        
+                    </th>
+                    <td class="label">
+                        <span t-esc="o.invoice_date_due" t-if="o.invoice_date_due"/>
+                    </td>
+                </tr>
+                <tr>
+                    <!-- TÉRMINO DE PAGO -->
+                    <th>
+                        <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                            <label t-esc="'T. PAGO/PAYMENT TERM: '"/>
+                        </t>
+                        <t t-else="">
+                            <label t-esc="'TÉRMINO PAGO: '"/>
+                        </t>
+                    </th>
+                    <td class="label">
+                        <span t-esc="o.invoice_payment_term_id.name" t-if="o.invoice_payment_term_id"/>
+                    </td>
+                </tr>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('table-invoice-lines')]/table/thead" position="replace">
+            <t t-if="o.l10n_pe_edi_operation_type == '0200'">
+                <thead>
+                    <tr>
+                        <th class="h_item">Item</th>
+                        <th class="h_quantity">Cant.<br/>Qty</th>
+                        <th class="h_product_uom_id">UdM<br/>UoM</th>
+                        <th class="h_name">Descripción<br/>Description</th>
+                        <th class="h_value_unit">Valor Unit.<br/>Unit value</th>
+                        <th class="h_price_unit">Precio Unit.<br/>Unit price</th>
+                        <th class="h_discount" t-if="display_discount">Dscto.(%)<br/>Discount(%)</th>
+                        <th class="h_price_total">Importe<br/>Amount</th>
+                    </tr>
+                </thead>
+            </t>
+            <t t-else="">
+                <thead>
+                    <tr>
+                        <th class="h_item">Item</th>
+                        <th class="h_quantity">Cant.</th>
+                        <th class="h_product_uom_id">U.M.</th>
+                        <th class="h_name">Descripción</th>
+                        <th class="h_value_unit">V.U.</th>
+                        <th class="h_price_unit">P.U.</th>
+                        <th class="h_discount" t-if="display_discount">Dscto.(%)</th>
+                        <th class="h_price_total">P.V.</th>
+                    </tr>
+                </thead>
+            </t>
+        </xpath>
+    </template>
+</odoo>

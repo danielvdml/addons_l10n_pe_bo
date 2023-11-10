@@ -13,6 +13,7 @@
         'templates/paperformat.xml',
         'templates/external_layout_background_cpe.xml',
         'templates/invoice_document.xml',
+        'templates/invoice_export_document.xml'
     ],
     'assets': {
         "web.report_assets_common":[
