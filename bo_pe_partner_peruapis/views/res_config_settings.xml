@@ -5,9 +5,12 @@
         <field name="inherit_id" ref="bo_pe_partner.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//div[@id='provider_search_partner_by_vat_settings']" position="inside">
-                <label for="peruapis_token" attrs="{'invisible':[('provider_search_partner_by_vat','!=','peruapis')]}"/>
+                <label for="peruapis_token" 
+                        invisible="provider_search_partner_by_vat != 'peruapis'"/>
                 <br/>
-                <field name="peruapis_token" attrs="{'invisible':[('provider_search_partner_by_vat','!=','peruapis')],'required':[('provider_search_partner_by_vat','=','peruapis')]}"/>
+                <field name="peruapis_token" 
+                        invisible="provider_search_partner_by_vat != 'peruapis'"
+                        required="provider_search_partner_by_vat == 'peruapis'"/>
             </xpath>
         </field>
     </record>
